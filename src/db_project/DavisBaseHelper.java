@@ -27,9 +27,8 @@ public class DavisBaseHelper {
 			byte curNumRecords = davisbaseTablesCatalog.readByte();
 			curNumRecords = (byte) (curNumRecords + 1);
 			davisbaseTablesCatalog.seek(1);
-			System.out.println(curNumRecords);
-			//TODO: figure out why it's not writing this byte
-			table.writeByte(curNumRecords);
+			//TODO: figure out why it won't print the byte value
+            davisbaseTablesCatalog.writeByte(curNumRecords);
 
 		}
 		catch(Exception e){

@@ -329,8 +329,6 @@ public class DavisBasePrompt {
 		for (int i = 3; i < createTableTokens.size(); i++)
 			columnNames.add(createTableTokens.get(i).replaceAll("\\(", "").replaceAll("\\)", "").replaceAll(",", ""));
 
-		out.println(createTableTokens);
-		out.println(columnNames);
 
 		try {
 			tableFile = new RandomAccessFile("data/userdata/" + tableFileName , "rw");
