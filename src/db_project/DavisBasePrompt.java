@@ -1,9 +1,13 @@
 package db_project;
 import java.io.RandomAccessFile;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
 import java.util.SortedMap;
+
+import database.ExecuteCommands;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import static java.lang.System.out;
@@ -31,7 +35,7 @@ public class DavisBasePrompt {
 	 * Page size for alll files is 512 bytes by default.
 	 * You may choose to make it user modifiable
 	 */
-	static long pageSize = 512;
+	static int pageSize = 512;
 
 	/*
 	 *  The Scanner class is used to collect user commands from the prompt
@@ -94,18 +98,9 @@ public class DavisBasePrompt {
 				File davisBaseTables = new File("data/catalog/davisbase_tables.tbl");
 				File davisBaseColumns = new File("data/catalog/davisbase_columns.tbl");
 
-				if (!davisBaseTables.exists() || !davisBaseColumns.exists()) {
-					File data = new File("data/catalog");
-					File userData = new File("data/userdata");
-					data.mkdir();
-					userData.mkdir();
-				}
-
 			} else {
-				File data = new File("data/catalog");
-				File userData = new File("data/userdata");
-				data.mkdir();
-				userData.mkdir();
+				out.println("Unable to create data container directory");
+				
 			}
 		}
 		catch (SecurityException se) {
@@ -153,6 +148,8 @@ public class DavisBasePrompt {
 		}
 
 	}
+	
+
 
 	/**
 	 * @param s The String to be repeated
@@ -289,22 +286,27 @@ public class DavisBasePrompt {
 	 *  @param createTableString is a String of the user input
 	 */
 	public static void parseCreateTable(String createTableString) {
-		RandomAccessFile tableFile;
-
 		System.out.println("Parsing the string:\"" + createTableString + "\"");
 		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(createTableString.split(" ")));
 
-		String tableFileName = createTableTokens.get(2) + ".tbl";
-		ArrayList<String> columnNames = new ArrayList<String>();
-		for (int i = 3; i < createTableTokens.size(); i++)
-			columnNames.add(createTableTokens.get(i).replaceAll("\\(", "").replaceAll("\\)", "").replaceAll(",", ""));
+		String tableName = createTableTokens.get(2);
+		String[] temp = createTableString.replaceAll("\\(", "").replaceAll("\\)", "").split(tableName);
+		String[] columnNames = temp[1].trim().split(",");
 
+		for (int i = 0; i < columnNames.length; i++)
+			columnNames[i] = columnNames[i].trim();
 
-		if (db_helper.findTable(tableFileName))
-			out.println("This table already exists.");
-		else {
-			//tableFile = new RandomAccessFile("data/userdata/" + tableFileName, "rw");
-			db_helper.createTable(tableFileName, columnNames);
+		if (DavisBaseHelper.findTable(tableName)) {
+			System.out.println("Table " + tableName + " is already present.");
+			System.out.println();
+		} else {
+			RandomAccessFile table;
+			try {
+				table = new RandomAccessFile("data/userdata/" + tableName + ".tbl", "rw");
+				DavisBaseHelper.createTable(table, tableName, columnNames);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
 		}
 
 	}
