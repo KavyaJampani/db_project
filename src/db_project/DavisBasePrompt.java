@@ -20,6 +20,8 @@ import static java.lang.System.out;
  */
 public class DavisBasePrompt {
 
+	static DavisBaseHelper db_helper;
+
 	/* This can be changed to whatever you like */
 	static String prompt = "davisql> ";
 	static String version = "v1.0b(example)";
@@ -332,8 +334,7 @@ public class DavisBasePrompt {
 
 		try {
 			tableFile = new RandomAccessFile("data/userdata/" + tableFileName , "rw");
-			tableFile.setLength(pageSize);
-			tableFile.seek(0);
+			db_helper.createTable(tableFile, tableFileName, columnNames);
 		}
 		catch(Exception e) {
 			System.out.println(e);

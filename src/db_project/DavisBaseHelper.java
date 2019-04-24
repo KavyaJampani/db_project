@@ -4,33 +4,37 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-
-
-
+import java.util.ArrayList;
 
 
 public class DavisBaseHelper {
-	
-	
-	public void initialize() throws IOException{
 
-		try {
-			File dir = new File("data/catalog");
-			if(dir != null)
-				dir.mkdir();
-			dir = new File("data/user_data");
-			if(dir != null)
-				dir.mkdir();
-			
-		} catch (SecurityException e) {
-			// TODO Auto-generated catch block
-			System.out.println("Unable to create data container directory");
-			System.out.println(e);
+	static long pageSize = 512;
+
+	
+	public static void createTable(RandomAccessFile table, String tableName, ArrayList<String> columnNames) {
+
+		try{
+			table.setLength(pageSize);
+			table.seek(0);
+			table.write(0x0D);
+			table.write(0x00);
+			table.seek(4);
+			table.writeInt(-1);
+
+			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+			davisbaseTablesCatalog.seek(1);
+			byte curNumRecords = davisbaseTablesCatalog.readByte();
+			curNumRecords = (byte) (curNumRecords + 1);
+			davisbaseTablesCatalog.seek(1);
+			System.out.println(curNumRecords);
+			//TODO: figure out why it's not writing this byte
+			table.writeByte(curNumRecords);
+
 		}
-	}
-	
-	public static void createTable(RandomAccessFile table, String tableName, String[] columnNames) {
-	
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	
 	
 	}
