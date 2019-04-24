@@ -51,7 +51,7 @@ public class DavisBasePrompt {
 		/* Variable to collect user input from the prompt */
 		String userCommand = "";
 
-		initialize();
+		initializeDataStore();
 
 		while(!isExit) {
 			System.out.print(prompt);
@@ -82,7 +82,7 @@ public class DavisBasePrompt {
 	}
 
 
-	public static void initialize() {
+	public static void initializeDataStore() {
 		try {
 			File catalogDir = new File("data/catalog");
 			File DataDir = new File("data/userdata");
@@ -122,6 +122,8 @@ public class DavisBasePrompt {
 			/* Write 0x00 (although its value is already 0x00) to indicate there
 			 * are no cells on this page */
 			davisbaseTablesCatalog.write(0x00);
+			davisbaseTablesCatalog.seek(4);
+			davisbaseTablesCatalog.writeInt(-1);
 			davisbaseTablesCatalog.close();
 		}
 		catch (Exception e) {
@@ -139,6 +141,8 @@ public class DavisBasePrompt {
 			/* Write 0x00 (although its value is already 0x00) to indicate there
 			 * are no cells on this page */
 			davisbaseColumnsCatalog.write(0x00);
+			davisbaseColumnsCatalog.seek(4);
+			davisbaseColumnsCatalog.writeInt(-1);
 			davisbaseColumnsCatalog.close();
 		}
 		catch (Exception e) {
@@ -310,6 +314,7 @@ public class DavisBasePrompt {
 	 *  @param createTableString is a String of the user input
 	 */
 	public static void parseCreateTable(String createTableString) {
+		RandomAccessFile tableFile;
 
 		System.out.println("STUB: Calling your method to create a table");
 		System.out.println("Parsing the string:\"" + createTableString + "\"");
@@ -317,30 +322,22 @@ public class DavisBasePrompt {
 
 		/* Define table file name */
 		String tableFileName = createTableTokens.get(2) + ".tbl";
+		ArrayList<String> columnNames = new ArrayList<String>();
+//
+		for (int i = 3; i < createTableTokens.size(); i++)
+			columnNames.add(createTableTokens.get(i).replaceAll("\\(", "").replaceAll("\\)", "").replaceAll(",", ""));
 
-		/* YOUR CODE GOES HERE */
+		out.println(createTableTokens);
+		out.println(columnNames);
 
-		/*  Code to create a .tbl file to contain table data */
 		try {
-			/*  Create RandomAccessFile tableFile in read-write mode.
-			 *  Note that this doesn't create the table file in the correct directory structure
-			 */
-			RandomAccessFile tableFile = new RandomAccessFile(tableFileName, "rw");
+			tableFile = new RandomAccessFile("data/userdata/" + tableFileName , "rw");
 			tableFile.setLength(pageSize);
 			tableFile.seek(0);
-			tableFile.writeInt(63);
 		}
 		catch(Exception e) {
 			System.out.println(e);
 		}
 
-		/*  Code to insert a row in the davisbase_tables table
-		 *  i.e. database catalog meta-data
-		 */
-
-		/*  Code to insert rows in the davisbase_columns table
-		 *  for each column in the new table
-		 *  i.e. database catalog meta-data
-		 */
 	}
 }
