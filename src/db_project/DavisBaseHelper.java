@@ -11,10 +11,30 @@ public class DavisBaseHelper {
 
 	static long pageSize = 512;
 
+	public static boolean findTable(String filename) {
+
+		File catalog = new File("data/catalog/");
+		String[] tablenames = catalog.list();
+		for (String table : tablenames) {
+			if (filename.equals(table))
+				return true;
+
+		}
+		File userdata = new File("data/userdata/");
+		String[] tables = userdata.list();
+		for (String table : tables) {
+
+			if (filename.equals(table))
+				return true;
+		}
+		return false;
+	}
+
 	
-	public static void createTable(RandomAccessFile table, String tableName, ArrayList<String> columnNames) {
+	public static void createTable( String tableFileName, ArrayList<String> columnNames) {
 
 		try{
+			RandomAccessFile table = new RandomAccessFile("data/userdata/" + tableFileName, "rw");
 			table.setLength(pageSize);
 			table.seek(0);
 			table.write(0x0D);
@@ -36,6 +56,21 @@ public class DavisBaseHelper {
 		}
 	
 	
+	}
+
+	public static void dropTable(String tableFileName){
+
+        try{
+            RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+
+            File file = new File("data/userdata/" + tableFileName );
+            file.delete();
+
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+
 	}
 	
 	

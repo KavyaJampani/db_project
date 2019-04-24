@@ -290,6 +290,10 @@ public class DavisBasePrompt {
 	public static void dropTable(String dropTableString) {
 		System.out.println("STUB: This is the dropTable method.");
 		System.out.println("\tParsing the string:\"" + dropTableString + "\"");
+		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(dropTableString.split(" ")));
+		String tableFileName = createTableTokens.get(2) + ".tbl";
+		if (db_helper.findTable(tableFileName))
+			db_helper.dropTable(tableFileName);
 	}
 
 	/**
@@ -318,25 +322,23 @@ public class DavisBasePrompt {
 	public static void parseCreateTable(String createTableString) {
 		RandomAccessFile tableFile;
 
-		System.out.println("STUB: Calling your method to create a table");
 		System.out.println("Parsing the string:\"" + createTableString + "\"");
 		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(createTableString.split(" ")));
 
-		/* Define table file name */
 		String tableFileName = createTableTokens.get(2) + ".tbl";
 		ArrayList<String> columnNames = new ArrayList<String>();
-//
 		for (int i = 3; i < createTableTokens.size(); i++)
 			columnNames.add(createTableTokens.get(i).replaceAll("\\(", "").replaceAll("\\)", "").replaceAll(",", ""));
 
 
-		try {
-			tableFile = new RandomAccessFile("data/userdata/" + tableFileName , "rw");
-			db_helper.createTable(tableFile, tableFileName, columnNames);
+		if (db_helper.findTable(tableFileName))
+			out.println("This table already exists.");
+		else {
+			//tableFile = new RandomAccessFile("data/userdata/" + tableFileName, "rw");
+			db_helper.createTable(tableFileName, columnNames);
 		}
-		catch(Exception e) {
-			System.out.println(e);
-		}
+
+
 
 	}
 }
