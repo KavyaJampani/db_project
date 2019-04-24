@@ -1,9 +1,7 @@
 package db_project;
 import java.io.RandomAccessFile;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.Scanner;
 import java.util.SortedMap;
 import java.util.ArrayList;
@@ -25,7 +23,7 @@ public class DavisBasePromptExample {
 	/* This can be changed to whatever you like */
 	static String prompt = "davisql> ";
 	static String version = "v1.0b(example)";
-	static String copyright = "©2016 Chris Irwin Davis";
+	static String copyright = "Â©2016 Chris Irwin Davis";
 	static boolean isExit = false;
 	/*
 	 * Page size for alll files is 512 bytes by default.
@@ -41,24 +39,17 @@ public class DavisBasePromptExample {
 	 *  String is re-populated.
 	 */
 	static Scanner scanner = new Scanner(System.in).useDelimiter(";");
-	static DavisBaseHelper db_helper;
-
-
 
 	/** ***********************************************************************
 	 *  Main method
-	 * @throws IOException
 	 */
-    public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 
 		/* Display the welcome screen */
 		splashScreen();
 
 		/* Variable to collect user input from the prompt */
 		String userCommand = "";
-
-		db_helper = new DavisBaseHelper();
-		db_helper.initialize();
 
 		while(!isExit) {
 			System.out.print(prompt);
@@ -81,11 +72,15 @@ public class DavisBasePromptExample {
 	 */
 	public static void splashScreen() {
 		System.out.println(line("-",80));
-        System.out.println("Welcome to DavisBaseLite"); // Display the string.
+		System.out.println("Welcome to DavisBaseLite"); // Display the string.
 		System.out.println("DavisBaseLite Version " + getVersion());
 		System.out.println(getCopyright());
 		System.out.println("\nType \"help;\" to display supported commands.");
 		System.out.println(line("-",80));
+	}
+
+	public static void initialize() {
+
 	}
 
 	/**
@@ -108,32 +103,32 @@ public class DavisBasePromptExample {
 		System.out.println("\t\t" + s);
 	}
 
-		/**
-		 *  Help: Display supported commands
-		 */
-		public static void help() {
-			out.println(line("*",80));
-			out.println("SUPPORTED COMMANDS\n");
-			out.println("All commands below are case insensitive\n");
-			out.println("SHOW TABLES;");
-			out.println("\tDisplay the names of all tables.\n");
-			//printCmd("SELECT * FROM <table_name>;");
-			//printDef("Display all records in the table <table_name>.");
-			out.println("SELECT <column_list> FROM <table_name> [WHERE <condition>];");
-			out.println("\tDisplay table records whose optional <condition>");
-			out.println("\tis <column_name> = <value>.\n");
-			out.println("DROP TABLE <table_name>;");
-			out.println("\tRemove table data (i.e. all records) and its schema.\n");
-			out.println("UPDATE TABLE <table_name> SET <column_name> = <value> [WHERE <condition>];");
-			out.println("\tModify records data whose optional <condition> is\n");
-			out.println("VERSION;");
-			out.println("\tDisplay the program version.\n");
-			out.println("HELP;");
-			out.println("\tDisplay this help information.\n");
-			out.println("EXIT;");
-			out.println("\tExit the program.\n");
-			out.println(line("*",80));
-		}
+	/**
+	 *  Help: Display supported commands
+	 */
+	public static void help() {
+		out.println(line("*",80));
+		out.println("SUPPORTED COMMANDS\n");
+		out.println("All commands below are case insensitive\n");
+		out.println("SHOW TABLES;");
+		out.println("\tDisplay the names of all tables.\n");
+		//printCmd("SELECT * FROM <table_name>;");
+		//printDef("Display all records in the table <table_name>.");
+		out.println("SELECT <column_list> FROM <table_name> [WHERE <condition>];");
+		out.println("\tDisplay table records whose optional <condition>");
+		out.println("\tis <column_name> = <value>.\n");
+		out.println("DROP TABLE <table_name>;");
+		out.println("\tRemove table data (i.e. all records) and its schema.\n");
+		out.println("UPDATE TABLE <table_name> SET <column_name> = <value> [WHERE <condition>];");
+		out.println("\tModify records data whose optional <condition> is\n");
+		out.println("VERSION;");
+		out.println("\tDisplay the program version.\n");
+		out.println("HELP;");
+		out.println("\tDisplay this help information.\n");
+		out.println("EXIT;");
+		out.println("\tExit the program.\n");
+		out.println(line("*",80));
+	}
 
 	/** return the DavisBase version */
 	public static String getVersion() {
@@ -160,34 +155,48 @@ public class DavisBasePromptExample {
 
 
 		/*
-		*  This switch handles a very small list of hardcoded commands of known syntax.
-		*  You will want to rewrite this method to interpret more complex commands.
-		*/
+		 *  This switch handles a very small list of hardcoded commands of known syntax.
+		 *  You will want to rewrite this method to interpret more complex commands.
+		 */
 		switch (commandTokens.get(0)) {
-			case "select":
-				System.out.println("CASE: SELECT");
-				parseQuery(userCommand);
-				break;
-			case "drop":
-				System.out.println("CASE: DROP");
-				dropTable(userCommand);
+			//DDL Commands
+			case "show":
+				System.out.println("CASE: SHOW");
+				showTables();
 				break;
 			case "create":
 				System.out.println("CASE: CREATE");
 				parseCreateTable(userCommand);
 				break;
+			case "drop":
+				System.out.println("CASE: DROP");
+				dropTable(userCommand);
+				break;
+			//DML Commands
+			case "insert":
+				System.out.println("CASE: INSERT");
+				break;
+			case "delete":
+				System.out.println("CASE: DELETE");
+				break;
 			case "update":
 				System.out.println("CASE: UPDATE");
 				parseUpdate(userCommand);
 				break;
+			//VDL Commands
+			case "select":
+				System.out.println("CASE: SELECT");
+				parseQuery(userCommand);
+				break;
+			case "exit":
+				isExit = true;
+				break;
+			//Misc Commands
 			case "help":
 				help();
 				break;
 			case "version":
 				displayVersion();
-				break;
-			case "exit":
-				isExit = true;
 				break;
 			case "quit":
 				isExit = true;
@@ -198,6 +207,17 @@ public class DavisBasePromptExample {
 	}
 
 
+	public static void showTables()
+	{
+		try {
+			RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+			int noOfPages = (int) (table.length() / pageSize);
+			System.out.println(noOfPages);
+		}  catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 *  Stub method for dropping tables
 	 *  @param dropTableString is a String of the user input
@@ -235,48 +255,33 @@ public class DavisBasePromptExample {
 		System.out.println("STUB: Calling your method to create a table");
 		System.out.println("Parsing the string:\"" + createTableString + "\"");
 		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(createTableString.split(" ")));
-		String tableName = createTableTokens.get(2);
-		String[] temp = createTableString.replaceAll("\\(", "").replaceAll("\\)", "").split(tableName);
-		String[] columnNames = temp[1].trim().split(",");
 
-		for (int i = 0; i < columnNames.length; i++)
-			columnNames[i] = columnNames[i].trim();
+		/* Define table file name */
+		String tableFileName = createTableTokens.get(2) + ".tbl";
 
-		if (findTable(tableName)) {
-			System.out.println("Table " + tableName + " is already present.");
-			System.out.println();
-		} else {
-			RandomAccessFile table;
-			try {
-				table = new RandomAccessFile("data/user_data/" + tableName + ".tbl", "rw");
-				db_helper.createTable(table, tableName, columnNames);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
+		/* YOUR CODE GOES HERE */
+
+		/*  Code to create a .tbl file to contain table data */
+		try {
+			/*  Create RandomAccessFile tableFile in read-write mode.
+			 *  Note that this doesn't create the table file in the correct directory structure
+			 */
+			RandomAccessFile tableFile = new RandomAccessFile(tableFileName, "rw");
+			tableFile.setLength(pageSize);
+			tableFile.seek(0);
+			tableFile.writeInt(63);
+		}
+		catch(Exception e) {
+			System.out.println(e);
 		}
 
+		/*  Code to insert a row in the davisbase_tables table
+		 *  i.e. database catalog meta-data
+		 */
+
+		/*  Code to insert rows in the davisbase_columns table
+		 *  for each column in the new table
+		 *  i.e. database catalog meta-data
+		 */
 	}
-
-	public static boolean findTable(String tableName) {
-
-		String filename = tableName + ".tbl";
-
-		File catalog = new File("data/catalog/");
-		String[] tablenames = catalog.list();
-		for (String table : tablenames) {
-			if (filename.equals(table))
-				return true;
-
-		}
-		File userdata = new File("data/user_data/");
-		String[] tables = userdata.list();
-		for (String table : tables) {
-
-			if (filename.equals(table))
-				return true;
-		}
-		return false;
-	}
-
-
 }
