@@ -31,23 +31,23 @@ public class DavisBasePromptExample {
 	 * Page size for alll files is 512 bytes by default.
 	 * You may choose to make it user modifiable
 	 */
-	static long pageSize = 512; 
+	static long pageSize = 512;
 
-	/* 
+	/*
 	 *  The Scanner class is used to collect user commands from the prompt
 	 *  There are many ways to do this. This is just one.
 	 *
-	 *  Each time the semicolon (;) delimiter is entered, the userCommand 
+	 *  Each time the semicolon (;) delimiter is entered, the userCommand
 	 *  String is re-populated.
 	 */
 	static Scanner scanner = new Scanner(System.in).useDelimiter(";");
 	static DavisBaseHelper db_helper;
-	
-	
-	
+
+
+
 	/** ***********************************************************************
 	 *  Main method
-	 * @throws IOException 
+	 * @throws IOException
 	 */
     public static void main(String[] args) throws IOException {
 
@@ -55,8 +55,8 @@ public class DavisBasePromptExample {
 		splashScreen();
 
 		/* Variable to collect user input from the prompt */
-		String userCommand = ""; 
-		
+		String userCommand = "";
+
 		db_helper = new DavisBaseHelper();
 		db_helper.initialize();
 
@@ -87,7 +87,7 @@ public class DavisBasePromptExample {
 		System.out.println("\nType \"help;\" to display supported commands.");
 		System.out.println(line("-",80));
 	}
-	
+
 	/**
 	 * @param s The String to be repeated
 	 * @param num The number of time to repeat String s.
@@ -100,14 +100,14 @@ public class DavisBasePromptExample {
 		}
 		return a;
 	}
-	
+
 	public static void printCmd(String s) {
 		System.out.println("\n\t" + s + "\n");
 	}
 	public static void printDef(String s) {
 		System.out.println("\t\t" + s);
 	}
-	
+
 		/**
 		 *  Help: Display supported commands
 		 */
@@ -139,29 +139,29 @@ public class DavisBasePromptExample {
 	public static String getVersion() {
 		return version;
 	}
-	
+
 	public static String getCopyright() {
 		return copyright;
 	}
-	
+
 	public static void displayVersion() {
 		System.out.println("DavisBaseLite Version " + getVersion());
 		System.out.println(getCopyright());
 	}
-		
+
 	public static void parseUserCommand (String userCommand) {
-		
-		/* commandTokens is an array of Strings that contains one token per array element 
-		 * The first token can be used to determine the type of command 
+
+		/* commandTokens is an array of Strings that contains one token per array element
+		 * The first token can be used to determine the type of command
 		 * The other tokens can be used to pass relevant parameters to each command-specific
 		 * method inside each case statement */
 		// String[] commandTokens = userCommand.split(" ");
 		ArrayList<String> commandTokens = new ArrayList<String>(Arrays.asList(userCommand.split(" ")));
-		
+
 
 		/*
 		*  This switch handles a very small list of hardcoded commands of known syntax.
-		*  You will want to rewrite this method to interpret more complex commands. 
+		*  You will want to rewrite this method to interpret more complex commands.
 		*/
 		switch (commandTokens.get(0)) {
 			case "select":
@@ -196,7 +196,7 @@ public class DavisBasePromptExample {
 				break;
 		}
 	}
-	
+
 
 	/**
 	 *  Stub method for dropping tables
@@ -206,7 +206,7 @@ public class DavisBasePromptExample {
 		System.out.println("STUB: This is the dropTable method.");
 		System.out.println("\tParsing the string:\"" + dropTableString + "\"");
 	}
-	
+
 	/**
 	 *  Stub method for executing queries
 	 *  @param queryString is a String of the user input
@@ -225,13 +225,13 @@ public class DavisBasePromptExample {
 		System.out.println("Parsing the string:\"" + updateString + "\"");
 	}
 
-	
+
 	/**
 	 *  Stub method for creating new tables
-	 *  @param queryString is a String of the user input
+	 *  @param createTableString is a String of the user input
 	 */
 	public static void parseCreateTable(String createTableString) {
-		
+
 		System.out.println("STUB: Calling your method to create a table");
 		System.out.println("Parsing the string:\"" + createTableString + "\"");
 		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(createTableString.split(" ")));
@@ -256,7 +256,7 @@ public class DavisBasePromptExample {
 		}
 
 	}
-	
+
 	public static boolean findTable(String tableName) {
 
 		String filename = tableName + ".tbl";
@@ -278,5 +278,5 @@ public class DavisBasePromptExample {
 		return false;
 	}
 
-	
+
 }
