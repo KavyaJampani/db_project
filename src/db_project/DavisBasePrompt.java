@@ -241,14 +241,16 @@ public class DavisBasePrompt {
 				break;
 			case "drop":
 				System.out.println("CASE: DROP");
-				dropTable(userCommand);
+				parseDropTable(userCommand);
 				break;
 			//DML Commands
 			case "insert":
 				System.out.println("CASE: INSERT");
+				parseInsert(userCommand);
 				break;
 			case "delete":
 				System.out.println("CASE: DELETE");
+				parseDelete(userCommand);
 				break;
 			case "update":
 				System.out.println("CASE: UPDATE");
@@ -278,43 +280,10 @@ public class DavisBasePrompt {
 	}
 
 
-	public static void showTables()
-	{
+	public static void showTables() {
 
 	}
-
-	/**
-	 *  Stub method for dropping tables
-	 *  @param dropTableString is a String of the user input
-	 */
-	public static void dropTable(String dropTableString) {
-		System.out.println("STUB: This is the dropTable method.");
-		System.out.println("\tParsing the string:\"" + dropTableString + "\"");
-		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(dropTableString.split(" ")));
-		String tableFileName = createTableTokens.get(2) + ".tbl";
-		if (db_helper.findTable(tableFileName))
-			db_helper.dropTable(tableFileName);
-	}
-
-	/**
-	 *  Stub method for executing queries
-	 *  @param queryString is a String of the user input
-	 */
-	public static void parseQuery(String queryString) {
-		System.out.println("STUB: This is the parseQuery method");
-		System.out.println("\tParsing the string:\"" + queryString + "\"");
-	}
-
-	/**
-	 *  Stub method for updating records
-	 *  @param updateString is a String of the user input
-	 */
-	public static void parseUpdate(String updateString) {
-		System.out.println("STUB: This is the dropTable method");
-		System.out.println("Parsing the string:\"" + updateString + "\"");
-	}
-
-
+	
 	/**
 	 *  Stub method for creating new tables
 	 *  @param createTableString is a String of the user input
@@ -338,7 +307,62 @@ public class DavisBasePrompt {
 			db_helper.createTable(tableFileName, columnNames);
 		}
 
+	}
 
+	/**
+	 *  Stub method for dropping tables
+	 *  @param dropTableString is a String of the user input
+	 */
+	public static void parseDropTable(String dropTableString) {
+		System.out.println("\tParsing the string:\"" + dropTableString + "\"");
+		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(dropTableString.split(" ")));
+		String tableFileName = createTableTokens.get(2) + ".tbl";
+		if (db_helper.findTable(tableFileName))
+			db_helper.dropTable(tableFileName);
+	}
+
+
+	public static void parseInsert(String insertString) {
+		System.out.println("\tParsing the string:\"" + insertString + "\"");
+		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(insertString.split(" ")));
+		String columnList = createTableTokens.get(3).replaceAll("\\(", "").replaceAll("\\)", "");
+		String tableFileName = createTableTokens.get(4) + ".tbl";
+
+		ArrayList<String> values = new ArrayList<String>();
+		for (int i = 6; i < createTableTokens.size(); i++)
+			values.add(createTableTokens.get(i).replaceAll("\\(", "").replaceAll("\\)", "").replaceAll(",", ""));
+		out.println(columnList);
+		out.println(tableFileName);
+		out.println(values);
 
 	}
+	public static void parseDelete(String deleteString) {
+		System.out.println("\tParsing the string:\"" + deleteString + "\"");
+		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(deleteString.split(" ")));
+		String tableFileName = createTableTokens.get(3) + ".tbl";
+		String condition = createTableTokens.get(5);
+	}
+
+	public static void parseUpdate(String updateString) {
+		System.out.println("Parsing the string:\"" + updateString + "\"");
+		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(updateString.split(" ")));
+		String tableFileName = createTableTokens.get(1) + ".tbl";
+		String columnName = createTableTokens.get(3);
+		String value = createTableTokens.get(5);
+		String condition = createTableTokens.get(7);
+	}
+
+	/**
+	 *  Stub method for executing queries
+	 *  @param queryString is a String of the user input
+	 */
+	public static void parseQuery(String queryString) {
+		System.out.println("\tParsing the string:\"" + queryString + "\"");
+		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
+		String tableFileName = createTableTokens.get(3) + ".tbl";
+		String condition = createTableTokens.get(5);
+	}
+
+
+
 }
