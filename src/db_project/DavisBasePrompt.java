@@ -513,9 +513,16 @@ public class DavisBasePrompt {
 	public static void parseDropTable(String dropTableString) {
 		System.out.println("\tParsing the string:\"" + dropTableString + "\"");
 		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(dropTableString.split(" ")));
-		String tableFileName = createTableTokens.get(2) + ".tbl";
-		if (db_helper.findTable(tableFileName))
-			db_helper.dropTable(tableFileName);
+		String tableName = createTableTokens.get(2);
+		if (tableName == "davisbase_tables" ||  tableName == "davisbase_columns") {
+			System.out.println("User Error: Cannot drop the meta tables.");
+			return;
+		}
+		if (db_helper.findTable(tableName+".tbl"))
+			db_helper.dropTable(tableName);
+		else{
+		    System.out.println("User Error: Table does not exist.");
+        }
 	}
 
 

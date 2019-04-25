@@ -218,12 +218,59 @@ public class DavisBaseHelper {
 
 
 
-	public static void dropTable(String tableFileName){
+	public static void dropTable(String tableName){
 
         try{
             RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
 
-            File file = new File("data/userdata/" + tableFileName );
+			//get record count
+			davisbaseTablesCatalog.seek(1);
+			byte recordCount = davisbaseTablesCatalog.readByte();
+
+			short[] offset = new short[recordCount];
+
+			//access array of record locations
+			davisbaseTablesCatalog.seek(8);
+
+			System.out.println(recordCount);
+			for (int i = 0; i< recordCount; i++){
+				offset[i] = davisbaseTablesCatalog.readShort();
+			}
+			String curTableName = "";
+			byte curChar;
+			char ch ;
+			for (int i = 0; i< recordCount; i++){
+
+				davisbaseTablesCatalog.seek(offset[i]+7);
+				byte stringSize = davisbaseTablesCatalog.readByte();
+				davisbaseTablesCatalog.seek(offset[i]+8);
+				for (int j = 0; j< stringSize-12; j++){
+
+					curChar = davisbaseTablesCatalog.readByte();
+					ch = (char) curChar;
+					curTableName = curTableName + ch;
+
+				}
+				//TODO: known bug: davisbase_columns isn't read
+				//System.out.println(curTableName);
+				if(curTableName.equals(tableName) ){
+					davisbaseTablesCatalog.seek(8+(i*2));
+					davisbaseTablesCatalog.writeShort(-1);
+
+					//decrement record count
+					davisbaseTablesCatalog.seek(1);
+					recordCount = (byte) (recordCount - 1);
+					davisbaseTablesCatalog.writeByte(recordCount);
+
+					break;
+				}
+				else {
+					curTableName = "";
+				}
+
+			}
+
+            File file = new File("data/userdata/" + tableName +".tbl");
             file.delete();
 
         }
