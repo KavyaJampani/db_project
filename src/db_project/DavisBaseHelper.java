@@ -82,7 +82,48 @@ public class DavisBaseHelper {
 		try{
 
 			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
-			updateNumOfRecords(davisbaseTablesCatalog);
+
+			int payloadLength = tableName.length();
+			int recordHeaderLength = 1 + 1;
+			int totalRecordLength = recordHeaderLength + payloadLength;
+			int recordSpace = 2 + 4 + totalRecordLength;
+
+			//Increment record count
+			davisbaseTablesCatalog.seek(1);
+			byte curNumRecords = davisbaseTablesCatalog.readByte();
+			curNumRecords = (byte) (curNumRecords + 1);
+			davisbaseTablesCatalog.seek(1);
+			davisbaseTablesCatalog.writeByte(curNumRecords);
+
+			//Update Array of Record Locations
+			davisbaseTablesCatalog.seek(7+ ((curNumRecords-1)*2)-1);
+			short oldStartLocation = davisbaseTablesCatalog.readShort();
+			davisbaseTablesCatalog.seek(7+ ((curNumRecords-1)*2)+1);
+			davisbaseTablesCatalog.writeShort(oldStartLocation - recordSpace+1);
+
+			//Update Start of Content Location
+			davisbaseTablesCatalog.seek(2);
+			davisbaseTablesCatalog.writeShort(oldStartLocation - recordSpace+1);
+
+			//get prev rowid
+			davisbaseTablesCatalog.seek(oldStartLocation+3);
+			int prevRowid = davisbaseTablesCatalog.readInt();
+			System.out.println(prevRowid);
+
+			//add record value
+			davisbaseTablesCatalog.seek(oldStartLocation - recordSpace+1);
+
+			// Set Length of Payload
+			davisbaseTablesCatalog.writeShort(totalRecordLength);
+			// Set rowid
+			davisbaseTablesCatalog.writeInt(prevRowid+1);
+			// Set Number of Columns
+			davisbaseTablesCatalog.write(0x01);
+			// Store Array of Column Data Types
+			davisbaseTablesCatalog.write(0x0C + tableName.length());
+			// Store List of Column Data Values
+			davisbaseTablesCatalog.writeBytes(tableName);
+
 
 
 		}

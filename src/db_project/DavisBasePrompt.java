@@ -97,8 +97,8 @@ public class DavisBasePrompt {
 
 			int payloadLength2 = "davisbase_columns".length();
 			int recordHeaderLength2 = 1 + 1;
-			int totalRecordLength2 = recordHeaderLength+ payloadLength;
-			int recordSpace2 = 2 + 4 + totalRecordLength;
+			int totalRecordLength2 = recordHeaderLength2+ payloadLength2;
+			int recordSpace2 = 2 + 4 + totalRecordLength2;
 
 
 			davisbaseTablesCatalog.setLength(pageSize);
@@ -118,7 +118,7 @@ public class DavisBasePrompt {
 			davisbaseTablesCatalog.writeShort(pageSize - recordSpace  - recordSpace2 - 1);
 
 			//Record 2
-			davisbaseTablesCatalog.seek(pageSize - recordSpace - recordSpace2 - 1);
+			davisbaseTablesCatalog.seek(pageSize - recordSpace - recordSpace2);
 			// Set Length of Payload
 			davisbaseTablesCatalog.writeShort(totalRecordLength2);
 			// Set rowid
@@ -165,7 +165,7 @@ public class DavisBasePrompt {
 			short[] payloadLengths = {34,40,41,35,41,42,40};
 			offset[0] = (short)(pageSize - payloadLengths[0]);
 			for(int i = 1; i< payloadLengths.length; i++){
-				offset[i] = (short)(offset[i-1] - payloadLengths[i] - 1);
+				offset[i] = (short)(offset[i-1] - payloadLengths[i]);
 			}
 
 			davisbaseColumnsCatalog.setLength(pageSize);
