@@ -48,7 +48,6 @@ public class DavisBaseHelper {
 			table.write(0x00);
 			table.seek(4);
 			table.writeInt(-1);
-			table.writeBytes("davisbase_tables");
 			table.close();
 
 			updateMetaTable(tableName);
@@ -279,8 +278,86 @@ public class DavisBaseHelper {
         }
 
 	}
-	
-	
+
+	public static void insertRecord(String tableName, String[] insertValues) {
+
+		try{
+			RandomAccessFile table = new RandomAccessFile("data/userdata/" + tableName + ".tbl", "rw");
+
+
+			int payloadLength = 0;
+
+			for (int i = 0; i < insertValues.length; i++)
+				payloadLength += insertValues[i].length() ;
+			int recordHeaderLength = 1 + insertValues.length;
+			int totalRecordLength = recordHeaderLength + payloadLength;
+			int recordSpace = 2 + 4 + totalRecordLength;
+
+			//Increment record count
+			table.seek(1);
+			byte recordCount = table.readByte();
+			recordCount = (byte) (recordCount + 1);
+			table.seek(1);
+			table.writeByte(recordCount);
+
+			short oldStartLocation;
+			int prevRowid;
+			if(recordCount-1 == 0){
+
+				oldStartLocation = (short) pageSize;
+				prevRowid = 0;
+
+			}
+			else{
+
+				//get prev record location
+				table.seek(2);
+				oldStartLocation = table.readShort();
+
+				//get prev rowid
+				table.seek(oldStartLocation+3);
+				prevRowid = table.readInt();
+
+			}
+
+
+			table.seek(7+ ((recordCount-1)*2)+1);
+			table.writeShort(oldStartLocation - recordSpace);
+
+			//Update Start of Content Location
+			table.seek(2);
+			table.writeShort(oldStartLocation - recordSpace);
+
+
+			//add record value
+			table.seek(oldStartLocation - recordSpace);
+
+			// Set Length of Payload
+			table.writeShort(totalRecordLength);
+			// Set rowid
+			table.writeInt(prevRowid+1);
+			// Set Number of Columns
+			table.write(insertValues.length);
+
+			for (int i = 0; i < insertValues.length; i++)
+				// Store Array of Column Data Types
+				table.write(0x0C + insertValues[i].length());
+			for (int i = 0; i < insertValues.length; i++)
+				// Store List of Column Data Values
+				table.writeBytes(insertValues[i]);
+
+
+			table.close();
+
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+
+
+
+
 }
 
 	

@@ -527,17 +527,20 @@ public class DavisBasePrompt {
 
 
 	public static void parseInsert(String insertString) {
-		System.out.println("\tParsing the string:\"" + insertString + "\"");
-		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(insertString.split(" ")));
-		String columnList = createTableTokens.get(3).replaceAll("\\(", "").replaceAll("\\)", "");
-		String tableFileName = createTableTokens.get(4) + ".tbl";
+		String[] insert = insertString.split(" ");
+		String tableName = insert[2].trim();
+		String values = insertString.split("values")[1].replaceAll("\\(", "").replaceAll("\\)", "").trim();
 
-		ArrayList<String> values = new ArrayList<String>();
-		for (int i = 6; i < createTableTokens.size(); i++)
-			values.add(createTableTokens.get(i).replaceAll("\\(", "").replaceAll("\\)", "").replaceAll(",", ""));
-		out.println(columnList);
-		out.println(tableFileName);
-		out.println(values);
+		String[] insertValues = values.split(",");
+		for (int i = 0; i < insertValues.length; i++)
+			insertValues[i] = insertValues[i].trim();
+
+		if (!db_helper.findTable(tableName+".tbl")) {
+			System.out.println("Table " + tableName + " does not exist.");
+			System.out.println();
+			return;
+		} else
+			db_helper.insertRecord(tableName, insertValues);
 
 	}
 	public static void parseDelete(String deleteString) {
