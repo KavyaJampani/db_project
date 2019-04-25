@@ -86,6 +86,237 @@ public class DavisBasePrompt {
 		System.out.println(line("-",80));
 	}
 
+	public static void initializeMetaTable() {
+		try {
+			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+
+			int payloadLength = "davisbase_tables".length();
+			int recordHeaderLength = 1 + 1;
+			int totalRecordLength = recordHeaderLength+ payloadLength;
+			int recordSpace = 2 + 4 + totalRecordLength;
+
+			int payloadLength2 = "davisbase_columns".length();
+			int recordHeaderLength2 = 1 + 1;
+			int totalRecordLength2 = recordHeaderLength2+ payloadLength2;
+			int recordSpace2 = 2 + 4 + totalRecordLength2;
+
+
+			davisbaseTablesCatalog.setLength(pageSize);
+
+			// Header
+			davisbaseTablesCatalog.seek(0);
+			// Set Page Type
+			davisbaseTablesCatalog.write(0x0D);
+			// Set Number of Records
+			davisbaseTablesCatalog.write(0x02);
+			// Set Start of Content Location
+			davisbaseTablesCatalog.writeShort(pageSize - recordSpace - recordSpace2 - 1);
+			// Set Rightmost Leaf Page
+			davisbaseTablesCatalog.writeInt(-1);
+			// Store Array of Record Locations
+			davisbaseTablesCatalog.writeShort(pageSize - recordSpace);
+			davisbaseTablesCatalog.writeShort(pageSize - recordSpace  - recordSpace2 - 1);
+
+			//Record 2
+			davisbaseTablesCatalog.seek(pageSize - recordSpace - recordSpace2);
+			// Set Length of Payload
+			davisbaseTablesCatalog.writeShort(totalRecordLength2);
+			// Set rowid
+			davisbaseTablesCatalog.writeInt(2);
+			// Set Number of Columns
+			davisbaseTablesCatalog.write(0x01);
+			// Store Array of Column Data Types
+			davisbaseTablesCatalog.write(0x0C + "davisbase_columns".length());
+			// Store List of Column Data Values
+			davisbaseTablesCatalog.writeBytes("davisbase_columns");
+
+			//Record 1
+			//davisbaseTablesCatalog.seek(pageSize - recordSpace);
+
+			// Set Length of Payload
+			davisbaseTablesCatalog.writeShort(totalRecordLength);
+			// Set rowid
+			davisbaseTablesCatalog.writeInt(1);
+			// Set Number of Columns
+			davisbaseTablesCatalog.write(0x01);
+			// Store Array of Column Data Types
+			davisbaseTablesCatalog.write(0x0C + "davisbase_tables".length());
+			// Store List of Column Data Values
+			davisbaseTablesCatalog.writeBytes("davisbase_tables");
+
+			davisbaseTablesCatalog.close();
+		}
+		catch (Exception e) {
+			out.println("Unable to create the database_tables file");
+			out.println(e);
+		}
+
+	}
+
+	public static void insertRecord(){
+
+	}
+
+	public static void initializeMetaColumns() {
+		try {
+			RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
+
+			short[] offset = new short[7];
+			short[] payloadLengths = {34,40,41,35,41,42,40};
+			offset[0] = (short)(pageSize - payloadLengths[0]);
+			for(int i = 1; i< payloadLengths.length; i++){
+				offset[i] = (short)(offset[i-1] - payloadLengths[i]);
+			}
+
+			davisbaseColumnsCatalog.setLength(pageSize);
+
+			// Header
+			davisbaseColumnsCatalog.seek(0);
+			// Set Page Type
+			davisbaseColumnsCatalog.write(0x0D);
+			// Set Number of Records
+			davisbaseColumnsCatalog.write(7);
+			// Set Start of Content Location
+			davisbaseColumnsCatalog.writeShort(offset[offset.length-1]);
+			// Set Rightmost Leaf Page
+			davisbaseColumnsCatalog.writeInt(-1);
+			// Store Array of Record Locations
+			for (int i = 0; i< 7; i++){
+				davisbaseColumnsCatalog.writeShort(offset[i]);
+			}
+
+			davisbaseColumnsCatalog.seek(offset[6]);
+			//Record 7
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(7);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_columns".length());
+			davisbaseColumnsCatalog.write(0x0C + "data_type".length());
+			davisbaseColumnsCatalog.write(0x0C + "TEXT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_columns");
+			davisbaseColumnsCatalog.writeBytes("data_type");
+			davisbaseColumnsCatalog.writeBytes("TEXT");
+
+
+			//Record 6
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(5);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_columns".length());
+			davisbaseColumnsCatalog.write(0x0C + "column_name".length());
+			davisbaseColumnsCatalog.write(0x0C + "TEXT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_columns");
+			davisbaseColumnsCatalog.writeBytes("column_name");
+			davisbaseColumnsCatalog.writeBytes("TEXT");
+
+			//Record 5
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(5);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_columns".length());
+			davisbaseColumnsCatalog.write(0x0C + "table_name".length());
+			davisbaseColumnsCatalog.write(0x0C + "TEXT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_columns");
+			davisbaseColumnsCatalog.writeBytes("table_name");
+			davisbaseColumnsCatalog.writeBytes("TEXT");
+
+			//Record 4
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(4);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_columns".length());
+			davisbaseColumnsCatalog.write(0x0C + "rowid".length());
+			davisbaseColumnsCatalog.write(0x0C + "INT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_columns");
+			davisbaseColumnsCatalog.writeBytes("rowid");
+			davisbaseColumnsCatalog.writeBytes("INT");
+
+			//Record 3
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(3);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_tables".length());
+			davisbaseColumnsCatalog.write(0x0C + "record_count".length());
+			davisbaseColumnsCatalog.write(0x0C + "INT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_tables");
+			davisbaseColumnsCatalog.writeBytes("record_count");
+			davisbaseColumnsCatalog.writeBytes("INT");
+
+
+			//Record 2
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[1]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(2);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_tables".length());
+			davisbaseColumnsCatalog.write(0x0C + "table_name".length());
+			davisbaseColumnsCatalog.write(0x0C + "TEXT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_tables");
+			davisbaseColumnsCatalog.writeBytes("table_name");
+			davisbaseColumnsCatalog.writeBytes("TEXT");
+
+
+			//Record 1
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[0]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(1);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_tables".length());
+			davisbaseColumnsCatalog.write(0x0C + "rowid".length());
+			davisbaseColumnsCatalog.write(0x0C + "INT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_tables");
+			davisbaseColumnsCatalog.writeBytes("rowid");
+			davisbaseColumnsCatalog.writeBytes("INT");
+
+			davisbaseColumnsCatalog.close();
+		}
+		catch (Exception e) {
+			out.println("Unable to create the database_tables file");
+			out.println(e);
+		}
+
+	}
+
 
 	public static void initializeDataStore() {
 		try {
@@ -106,45 +337,10 @@ public class DavisBasePrompt {
 			out.println("Unable to create data container directory");
 			out.println(se);
 		}
-		try {
-			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
-			/* Initially, the file is one page in length */
-			davisbaseTablesCatalog.setLength(pageSize);
-			/* Set file pointer to the beginning of the file */
-			davisbaseTablesCatalog.seek(0);
-			/* Write 0x0D to the page header to indicate that it's a leaf page.
-			 * The file pointer will automatically increment to the next byte. */
-			davisbaseTablesCatalog.write(0x0D);
-			/* Write 0x00 (although its value is already 0x00) to indicate there
-			 * are no cells on this page */
-			davisbaseTablesCatalog.write(0x00);
-			davisbaseTablesCatalog.seek(4);
-			davisbaseTablesCatalog.writeInt(-1);
-			davisbaseTablesCatalog.close();
-		}
-		catch (Exception e) {
-			out.println("Unable to create the database_tables file");
-			out.println(e);
-		}
-		try {
-			RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
-			/** Initially the file is one page in length */
-			davisbaseColumnsCatalog.setLength(pageSize);
-			davisbaseColumnsCatalog.seek(0);       // Set file pointer to the beginnning of the file
-			/* Write 0x0D to the page header to indicate a leaf page. The file
-			 * pointer will automatically increment to the next byte. */
-			davisbaseColumnsCatalog.write(0x0D);
-			/* Write 0x00 (although its value is already 0x00) to indicate there
-			 * are no cells on this page */
-			davisbaseColumnsCatalog.write(0x00);
-			davisbaseColumnsCatalog.seek(4);
-			davisbaseColumnsCatalog.writeInt(-1);
-			davisbaseColumnsCatalog.close();
-		}
-		catch (Exception e) {
-			out.println("Unable to create the database_columns file");
-			out.println(e);
-		}
+
+		initializeMetaTable();
+		initializeMetaColumns();
+
 
 	}
 	
@@ -317,9 +513,16 @@ public class DavisBasePrompt {
 	public static void parseDropTable(String dropTableString) {
 		System.out.println("\tParsing the string:\"" + dropTableString + "\"");
 		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(dropTableString.split(" ")));
-		String tableFileName = createTableTokens.get(2) + ".tbl";
-		if (db_helper.findTable(tableFileName))
-			db_helper.dropTable(tableFileName);
+		String tableName = createTableTokens.get(2);
+		if (tableName == "davisbase_tables" ||  tableName == "davisbase_columns") {
+			System.out.println("User Error: Cannot drop the meta tables.");
+			return;
+		}
+		if (db_helper.findTable(tableName+".tbl"))
+			db_helper.dropTable(tableName);
+		else{
+		    System.out.println("User Error: Table does not exist.");
+        }
 	}
 
 
