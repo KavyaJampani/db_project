@@ -52,7 +52,7 @@ public class DavisBaseHelper {
 			table.close();
 
 			updateMetaTable(tableName);
-			updateMetaColumns(columnNames);
+			updateMetaColumns(tableName, columnNames);
 
 
 		}
@@ -61,22 +61,6 @@ public class DavisBaseHelper {
 		}
 	}
 
-	public static void updateNumOfRecords(RandomAccessFile page){
-		try{
-
-			page.seek(1);
-			byte curNumRecords = page.readByte();
-			curNumRecords = (byte) (curNumRecords + 1);
-			page.seek(1);
-			page.writeByte(curNumRecords);
-
-
-		}
-		catch(Exception e){
-			e.printStackTrace();
-		}
-
-	}
 
 	public static void updateMetaTable(String tableName){
 		try{
@@ -90,15 +74,15 @@ public class DavisBaseHelper {
 
 			//Increment record count
 			davisbaseTablesCatalog.seek(1);
-			byte curNumRecords = davisbaseTablesCatalog.readByte();
-			curNumRecords = (byte) (curNumRecords + 1);
+			byte recordCount = davisbaseTablesCatalog.readByte();
+			recordCount = (byte) (recordCount + 1);
 			davisbaseTablesCatalog.seek(1);
-			davisbaseTablesCatalog.writeByte(curNumRecords);
+			davisbaseTablesCatalog.writeByte(recordCount);
 
 			//Update Array of Record Locations
-			davisbaseTablesCatalog.seek(7+ ((curNumRecords-1)*2)-1);
+			davisbaseTablesCatalog.seek(7+ ((recordCount-1)*2)-1);
 			short oldStartLocation = davisbaseTablesCatalog.readShort();
-			davisbaseTablesCatalog.seek(7+ ((curNumRecords-1)*2)+1);
+			davisbaseTablesCatalog.seek(7+ ((recordCount-1)*2)+1);
 			davisbaseTablesCatalog.writeShort(oldStartLocation - recordSpace+1);
 
 			//Update Start of Content Location
@@ -108,7 +92,6 @@ public class DavisBaseHelper {
 			//get prev rowid
 			davisbaseTablesCatalog.seek(oldStartLocation+3);
 			int prevRowid = davisbaseTablesCatalog.readInt();
-			System.out.println(prevRowid);
 
 			//add record value
 			davisbaseTablesCatalog.seek(oldStartLocation - recordSpace+1);
@@ -124,6 +107,7 @@ public class DavisBaseHelper {
 			// Store List of Column Data Values
 			davisbaseTablesCatalog.writeBytes(tableName);
 
+			davisbaseTablesCatalog.close();
 
 
 		}
@@ -132,13 +116,98 @@ public class DavisBaseHelper {
 		}
 
 	}
-	public static void updateMetaColumns(String[] columnNames){
+	public static void updateMetaColumns(String tableName, String[] columnNames){
 		try{
 
 			RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
-			updateNumOfRecords(davisbaseColumnsCatalog);
 
 
+			short[] offset = new short[columnNames.length];
+			short[] payloadLengths = new short[columnNames.length];
+
+			//Increment record count
+			davisbaseColumnsCatalog.seek(1);
+			byte recordCount = davisbaseColumnsCatalog.readByte();
+			recordCount = (byte) (recordCount + columnNames.length);
+			davisbaseColumnsCatalog.seek(1);
+			davisbaseColumnsCatalog.writeByte(recordCount);
+
+			// get previous start of content location
+			davisbaseColumnsCatalog.seek(2);
+			short oldStartLocation = davisbaseColumnsCatalog.readShort();
+
+			// set the first element's info first so we can loop through the rest
+			String[] columnInfo0 = columnNames[0].split(" ");
+
+			int payloadLength0 = tableName.length() + columnInfo0[0].length() + columnInfo0[1].length();
+			int recordHeaderLength0 = 1 + 3;
+			int totalRecordLength0 = recordHeaderLength0 + payloadLength0;
+			int recordSpace0 = 2 + 4 + totalRecordLength0;
+
+			payloadLengths[0] = (short) recordSpace0;
+			offset[0] = (short)(oldStartLocation - payloadLengths[0]+1);
+
+			//the rest
+			for(int i = 1; i< columnNames.length; i++){
+				String[] columnInfo = columnNames[i].split(" ");
+
+				int payloadLength = tableName.length() + columnInfo[0].length() + columnInfo[1].length();
+				int recordHeaderLength = 1 + 3;
+				int totalRecordLength = recordHeaderLength + payloadLength;
+				int recordSpace = 2 + 4 + totalRecordLength;
+
+				payloadLengths[i] = (short) recordSpace;
+
+				offset[i] = (short)(offset[i-1] - payloadLengths[i]);
+			}
+
+
+			//Update Array of Record Locations
+			davisbaseColumnsCatalog.seek(7+ ((recordCount-columnNames.length)*2)+1);
+			for (int i = 0; i< columnNames.length; i++){
+				davisbaseColumnsCatalog.writeShort(offset[i]);
+			}
+
+			//Update Start of Content Location
+			davisbaseColumnsCatalog.seek(2);
+			davisbaseColumnsCatalog.writeShort(offset[offset.length-1]);
+
+
+			for (int i = 0; i< columnNames.length; i++){
+
+				String[] columnInfo = columnNames[i].split(" ");
+
+				//get prev rowid
+				if (i==0)
+					davisbaseColumnsCatalog.seek(oldStartLocation+2);
+				else
+					davisbaseColumnsCatalog.seek(offset[i-1]+2);
+				int prevRowid = davisbaseColumnsCatalog.readInt();
+
+				//add record value
+
+				davisbaseColumnsCatalog.seek(offset[i]);
+
+				//Record 1
+				//davisbaseColumnsCatalog.seek(offset[0]);
+				// Set Length of Payload
+				davisbaseColumnsCatalog.writeShort(payloadLengths[i]);
+				// Set rowid
+				davisbaseColumnsCatalog.writeInt(prevRowid+1);
+				// Set Number of Columns
+				davisbaseColumnsCatalog.write(0x03);
+				// Store Array of Column Data Types
+				davisbaseColumnsCatalog.write(0x0C + tableName.length());
+				davisbaseColumnsCatalog.write(0x0C + columnInfo[0].length());
+				davisbaseColumnsCatalog.write(0x0C + columnInfo[1].length());
+				// Store List of Column Data Values
+				davisbaseColumnsCatalog.writeBytes(tableName);
+				davisbaseColumnsCatalog.writeBytes(columnInfo[0]);
+				davisbaseColumnsCatalog.writeBytes(columnInfo[1].toUpperCase());
+
+			}
+
+			davisbaseColumnsCatalog.close();
 
 		}
 		catch(Exception e){
@@ -146,7 +215,6 @@ public class DavisBaseHelper {
 		}
 
 	}
-
 
 
 

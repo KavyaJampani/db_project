@@ -175,7 +175,7 @@ public class DavisBasePrompt {
 			// Set Page Type
 			davisbaseColumnsCatalog.write(0x0D);
 			// Set Number of Records
-			davisbaseColumnsCatalog.write(10);
+			davisbaseColumnsCatalog.write(7);
 			// Set Start of Content Location
 			davisbaseColumnsCatalog.writeShort(offset[offset.length-1]);
 			// Set Rightmost Leaf Page
