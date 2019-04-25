@@ -48,22 +48,64 @@ public class DavisBaseHelper {
 			table.write(0x00);
 			table.seek(4);
 			table.writeInt(-1);
+			table.writeBytes("davisbase_tables");
 			table.close();
 
-			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
-			davisbaseTablesCatalog.seek(1);
-			byte curNumRecords = davisbaseTablesCatalog.readByte();
-			curNumRecords = (byte) (curNumRecords + 1);
-			davisbaseTablesCatalog.seek(1);
-			davisbaseTablesCatalog.writeByte(curNumRecords);
-			
+			updateMetaTable(tableName);
+			updateMetaColumns(columnNames);
+
 
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
 	}
-	
+
+	public static void updateNumOfRecords(RandomAccessFile page){
+		try{
+
+			page.seek(1);
+			byte curNumRecords = page.readByte();
+			curNumRecords = (byte) (curNumRecords + 1);
+			page.seek(1);
+			page.writeByte(curNumRecords);
+
+
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+
+	}
+
+	public static void updateMetaTable(String tableName){
+		try{
+
+			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+			updateNumOfRecords(davisbaseTablesCatalog);
+
+
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+
+	}
+	public static void updateMetaColumns(String[] columnNames){
+		try{
+
+			RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
+			updateNumOfRecords(davisbaseColumnsCatalog);
+
+
+
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+
+	}
+
 
 
 

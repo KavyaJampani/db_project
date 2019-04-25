@@ -86,6 +86,98 @@ public class DavisBasePrompt {
 		System.out.println(line("-",80));
 	}
 
+	public static void initializeMetaTable() {
+		try {
+			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+
+			int payloadLength = "davisbase_tables".length();
+			int recordHeaderLength = 1 + 1;
+			int totalRecordLength = recordHeaderLength+ payloadLength;
+			int recordSpace = 2 + 4 + totalRecordLength;
+
+			int payloadLength2 = "davisbase_columns".length();
+			int recordHeaderLength2 = 1 + 1;
+			int totalRecordLength2 = recordHeaderLength+ payloadLength;
+			int recordSpace2 = 2 + 4 + totalRecordLength;
+
+
+			davisbaseTablesCatalog.setLength(pageSize);
+
+			// Header
+			davisbaseTablesCatalog.seek(0);
+			// Set Page Type
+			davisbaseTablesCatalog.write(0x0D);
+			// Set Number of Records
+			davisbaseTablesCatalog.write(0x02);
+			// Set Start of Content Location
+			davisbaseTablesCatalog.writeShort(pageSize - recordSpace - recordSpace2 - 1);
+			// Set Rightmost Leaf Page
+			davisbaseTablesCatalog.writeInt(-1);
+			// Store Array of Record Locations
+			davisbaseTablesCatalog.writeShort(pageSize - recordSpace);
+			davisbaseTablesCatalog.writeShort(pageSize - recordSpace  - recordSpace2 - 1);
+
+			//Record 2
+			davisbaseTablesCatalog.seek(pageSize - recordSpace - recordSpace2 - 1);
+			// Set Length of Payload
+			davisbaseTablesCatalog.writeShort(totalRecordLength2);
+			// Set rowid
+			davisbaseTablesCatalog.writeInt(2);
+			// Set Number of Columns
+			davisbaseTablesCatalog.write(0x01);
+			// Store Array of Column Data Types
+			davisbaseTablesCatalog.write(0x0C + "davisbase_columns".length());
+			// Store List of Column Data Values
+			davisbaseTablesCatalog.writeBytes("davisbase_columns");
+
+			//Record 1
+			//davisbaseTablesCatalog.seek(pageSize - recordSpace);
+
+			// Set Length of Payload
+			davisbaseTablesCatalog.writeShort(totalRecordLength);
+			// Set rowid
+			davisbaseTablesCatalog.writeInt(1);
+			// Set Number of Columns
+			davisbaseTablesCatalog.write(0x01);
+			// Store Array of Column Data Types
+			davisbaseTablesCatalog.write(0x0C + "davisbase_tables".length());
+			// Store List of Column Data Values
+			davisbaseTablesCatalog.writeBytes("davisbase_tables");
+
+			davisbaseTablesCatalog.close();
+		}
+		catch (Exception e) {
+			out.println("Unable to create the database_tables file");
+			out.println(e);
+		}
+
+	}
+
+
+
+	public static void initializeMetaColumns() {
+		try {
+			RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
+			/** Initially the file is one page in length */
+			davisbaseColumnsCatalog.setLength(pageSize);
+			davisbaseColumnsCatalog.seek(0);       // Set file pointer to the beginnning of the file
+			/* Write 0x0D to the page header to indicate a leaf page. The file
+			 * pointer will automatically increment to the next byte. */
+			davisbaseColumnsCatalog.write(0x0D);
+			/* Write 0x00 (although its value is already 0x00) to indicate there
+			 * are no cells on this page */
+			davisbaseColumnsCatalog.write(0x00);
+			davisbaseColumnsCatalog.seek(4);
+			davisbaseColumnsCatalog.writeInt(-1);
+			davisbaseColumnsCatalog.close();
+		}
+		catch (Exception e) {
+			out.println("Unable to create the database_columns file");
+			out.println(e);
+		}
+
+	}
+
 
 	public static void initializeDataStore() {
 		try {
@@ -106,45 +198,10 @@ public class DavisBasePrompt {
 			out.println("Unable to create data container directory");
 			out.println(se);
 		}
-		try {
-			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
-			/* Initially, the file is one page in length */
-			davisbaseTablesCatalog.setLength(pageSize);
-			/* Set file pointer to the beginning of the file */
-			davisbaseTablesCatalog.seek(0);
-			/* Write 0x0D to the page header to indicate that it's a leaf page.
-			 * The file pointer will automatically increment to the next byte. */
-			davisbaseTablesCatalog.write(0x0D);
-			/* Write 0x00 (although its value is already 0x00) to indicate there
-			 * are no cells on this page */
-			davisbaseTablesCatalog.write(0x00);
-			davisbaseTablesCatalog.seek(4);
-			davisbaseTablesCatalog.writeInt(-1);
-			davisbaseTablesCatalog.close();
-		}
-		catch (Exception e) {
-			out.println("Unable to create the database_tables file");
-			out.println(e);
-		}
-		try {
-			RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
-			/** Initially the file is one page in length */
-			davisbaseColumnsCatalog.setLength(pageSize);
-			davisbaseColumnsCatalog.seek(0);       // Set file pointer to the beginnning of the file
-			/* Write 0x0D to the page header to indicate a leaf page. The file
-			 * pointer will automatically increment to the next byte. */
-			davisbaseColumnsCatalog.write(0x0D);
-			/* Write 0x00 (although its value is already 0x00) to indicate there
-			 * are no cells on this page */
-			davisbaseColumnsCatalog.write(0x00);
-			davisbaseColumnsCatalog.seek(4);
-			davisbaseColumnsCatalog.writeInt(-1);
-			davisbaseColumnsCatalog.close();
-		}
-		catch (Exception e) {
-			out.println("Unable to create the database_columns file");
-			out.println(e);
-		}
+
+		initializeMetaTable();
+		initializeMetaColumns();
+
 
 	}
 	
