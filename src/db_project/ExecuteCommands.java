@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class ExecuteCommands {
 
-    static int pageSize = 512;
+    static short pageSize = 512;
     static DavisBaseHelper dbHelper;
 
 
@@ -94,14 +94,14 @@ public class ExecuteCommands {
 
             for (int i = 0; i< columnNames.length; i++) {
                 String[] columnInfo = columnNames[i].split(" ");
-                String[] insertValues = new String[]{tableName, columnInfo[0], columnInfo[1].toUpperCase(), "YES"};
+                String[] insertValues = new String[]{tableName, columnInfo[0], columnInfo[1].toUpperCase(), "YES", Integer.toString(i)};
                 if (columnInfo.length > 2)
                     if (columnInfo[2].equals("NOT"))
                         insertValues[3] = "NO";
 
                 insertRecord(davisbaseColumnsCatalog, insertValues);
             }
-            //davisbaseColumnsCatalog.close();
+            davisbaseColumnsCatalog.close();
         }
         catch(Exception e){
             e.printStackTrace();
@@ -184,29 +184,25 @@ public class ExecuteCommands {
             short recordSpace = (short) (2 + 4 + totalRecordLength);
 
             int pageCount = (int) (table.length() / pageSize);
-            byte pageStart = 0;
 
-            Page page = new Page();
+            Page page;
 
             for (int x = 0; x < pageCount; x++) {
                 table.seek(pageSize * x);
+
                 byte pageType = table.readByte();
                 if (pageType == 0x0D) {
-                    pageStart = (byte)(pageSize * page.pageNo);
-                    page = dbHelper.retrievePageDetails(table, pageStart);
 
-                   page.incrementRecordCount(table);
-                    short oldStartLocation;
+                    page = dbHelper.retrievePageDetails(table, x);
+
+                    short oldStartLocation= page.startLocation;
 
                     int prevRowid;
                     if(page.recordCount == 0){
-
-                        oldStartLocation = (short) pageSize;
                         prevRowid = 0;
 
                     }
                     else{
-                        oldStartLocation = page.startLocation;
                         //TODO: access it through record class
                         table.seek(oldStartLocation+2);
                         prevRowid = table.readInt();
@@ -231,6 +227,8 @@ public class ExecuteCommands {
                     for (int i = 0; i < insertValues.length; i++)
                         // Store List of Column Data Values
                         table.writeBytes(insertValues[i]);
+
+                    page.incrementRecordCount(table);
 
                 }
             }

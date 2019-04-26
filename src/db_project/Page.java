@@ -46,7 +46,7 @@ public class Page {
             short newRecordLocation = (short) (startLocation - newRecordSpace);
 
             // update Array of Record Location
-            table.seek(pageStart+ 7+ ((recordCount-1)*2)+1);
+            table.seek(pageStart+ 7+ ((recordCount)*2)+1);
             table.writeShort(newRecordLocation);
 
             //Update Start of Content Location

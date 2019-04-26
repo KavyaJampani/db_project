@@ -82,6 +82,7 @@ public class DavisBaseHelper {
         Record record  = new Record();
 
         try{
+            //System.out.println("location " +  location);
             table.seek(location);
             record.payLoadSize = table.readShort();
             record.rowId = table.readInt();
@@ -175,11 +176,15 @@ public class DavisBaseHelper {
         return record;
     }
 
-	public static Page retrievePageDetails(RandomAccessFile table, short pageStart){
+	public static Page retrievePageDetails(RandomAccessFile table, int pageNo ){
 
         Page page = new Page();
+        byte pageStart = (byte)((pageSize * pageNo) +1);
+        if (pageNo == 0)
+            pageStart = 0;
 
         try{
+            page.pageNo = pageNo;
             table.seek(pageStart);
             page.pageType = table.readByte();
             page.recordCount = table.readByte();
@@ -189,6 +194,8 @@ public class DavisBaseHelper {
             for(int i = 0; i<page.recordCount; i++) {
                 page.recordLocations[i] = table.readShort();
             }
+            if(page.startLocation <= 0)
+                page.startLocation = (short) (pageStart + pageSize);
             table.seek(page.startLocation);
             page.records = new Record[page.recordCount];
             for (int i = 0; i < page.recordCount; i++)

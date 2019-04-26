@@ -107,7 +107,6 @@ public class DavisBasePrompt {
 			for (int i = 0; i< insertValues.length; i++)
 				executeCommand.insertRecord(davisbaseTableCatalog, insertValues[i]);
 
-			davisbaseTableCatalog.close();
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -140,7 +139,6 @@ public class DavisBasePrompt {
             for (int i = 0; i< insertValues.length; i++)
                 executeCommand.insertRecord(davisbaseColumnsCatalog, insertValues[i]);
 
-            davisbaseColumnsCatalog.close();
         }
         catch(Exception e){
             e.printStackTrace();
