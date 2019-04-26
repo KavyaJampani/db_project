@@ -1,11 +1,15 @@
 package db_project;
 
+import javafx.util.Pair;
+
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DavisBaseHelper {
 
@@ -30,9 +34,9 @@ public class DavisBaseHelper {
 		return false;
 	}
 
-	public static ArrayList<String> getColumnNames(String tableName) {
+	public static Map<String,String>  getColumnNames(String tableName) {
 
-        ArrayList<String> columnNames = new ArrayList<String>();
+        Map<String,String> columnPairs = new HashMap< String,String>();
 
         try{
 			RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
@@ -50,8 +54,9 @@ public class DavisBaseHelper {
                     page = retrievePageDetails(table, pageStart);
 
                     for (Record record : page.records){
-                        if(record.data[0].equals(tableName))
-                            columnNames.add(record.data[1]);
+                        if(record.data[0].equals(tableName)) {
+                            columnPairs.put(record.data[1], record.data[2]);
+                        }
                     }
                 }
             }
@@ -61,14 +66,14 @@ public class DavisBaseHelper {
 			e.printStackTrace();
 		}
 
-		return columnNames;
+		return columnPairs;
 
 	}
 
-	public static void displayColumns(ArrayList<String> columnNames){
+	public static void displayColumns(Map<String,String> columnNames){
 
         String displayString = "\t Row ID ";
-        for (String columnName : columnNames)
+        for (String columnName : columnNames.keySet())
         {
             displayString += "\t" + columnName;
         }

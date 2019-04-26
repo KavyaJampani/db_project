@@ -3,6 +3,7 @@ package db_project;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Map;
 
 
 public class ExecuteCommands {
@@ -24,10 +25,10 @@ public class ExecuteCommands {
             int pageCount = (int) (table.length() / pageSize);
             byte pageStart = 0;
 
-            Page page = new Page();
+            Map<String,String> columnPairs = dbHelper.getColumnNames(tableName);
+            dbHelper.displayColumns(columnPairs);
 
-            ArrayList<String> columnNames = dbHelper.getColumnNames(tableName);
-            dbHelper.displayColumns(columnNames);
+            Page page = new Page();
 
             for (int x = 0; x < pageCount; x++) {
                 table.seek(pageSize * x);
@@ -35,7 +36,7 @@ public class ExecuteCommands {
                 if (pageType == 0x0D) {
                     pageStart = (byte)(pageSize * page.pageNo);
                     page = dbHelper.retrievePageDetails(table, pageStart);
-                    
+
                     for (Record record : page.records){
                         System.out.println(record.displayRow());
                     }
