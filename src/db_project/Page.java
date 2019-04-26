@@ -1,6 +1,6 @@
 package db_project;
 
-import java.util.Map;
+import java.util.Arrays;
 
 public class Page {
 
@@ -10,7 +10,7 @@ public class Page {
     public short startLocation;
     public int rightSibling;
     public short[] recordLocations;
-    public Record records;
+    public Record[] records;
 
     public int getPageNo() {
         return pageNo;
@@ -60,11 +60,24 @@ public class Page {
         this.recordLocations = recordLocations;
     }
 
-    public Record getRecords() {
+    public Record[] getRecords() {
         return records;
     }
 
-    public void setRecords(Record records) {
+    public void setRecords(Record[] records) {
         this.records = records;
+    }
+
+    @Override
+    public String toString() {
+        return "Page{" +
+                "pageNo=" + pageNo +
+                ", pageType=" + pageType +
+                ", recordCount=" + recordCount +
+                ", startLocation=" + startLocation +
+                ", rightSibling=" + rightSibling +
+                ", recordLocations=" + Arrays.toString(recordLocations) +
+                ", records=" + Arrays.toString(records) +
+                '}';
     }
 }

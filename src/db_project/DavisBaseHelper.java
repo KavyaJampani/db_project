@@ -2,8 +2,9 @@ package db_project;
 
 import java.io.File;
 import java.io.RandomAccessFile;
-import java.util.Map;
-
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 public class DavisBaseHelper {
 
@@ -40,8 +41,6 @@ public class DavisBaseHelper {
 				byte pageType = table.readByte();
 				if (pageType == 0x0D) {
 					table.seek((pageSize * i) + 8);
-
-
 				}
 			}
 
@@ -52,61 +51,128 @@ public class DavisBaseHelper {
 
 	}
 
-	////havent finished, might not worked
-	public static void exhaustiveSearch(RandomAccessFile table, String search){
+    public static Record retrieveRecords(RandomAccessFile table, short location){
 
-		try{
+        Record record  = new Record();
 
-			//get record count
-			table.seek(1);
-			byte recordCount = table.readByte();
+        try{
+            table.seek(location);
+            record.payLoadSize = table.readShort();
+            record.rowId = table.readInt();
+            record.columnCount = table.readByte();
+            record.colDataTypes = new byte[record.columnCount];
+            for(int i = 0; i<record.columnCount; i++){
+                record.colDataTypes[i] = table.readByte();
+            }
+            record.data = new String[record.columnCount];
+            for(int i = 0; i<record.columnCount; i++){
 
-			short[] offset = new short[recordCount];
 
-			//access array of record locations
-			table.seek(8);
+                switch (record.colDataTypes[i]) {
 
-			for (int i = 0; i< recordCount; i++){
-				offset[i] = table.readShort();
-			}
-			String curTableName = "";
-			byte curChar;
-			char ch ;
-			for (int i = 0; i< recordCount; i++){
+                    //NULL
+                    case 0x00:
+                        record.data[i] = "null";
+                        break;
 
-				table.seek(offset[i]+7);
-				byte stringSize = table.readByte();
-				table.seek(offset[i]+8);
-				for (int j = 0; j< stringSize-12; j++){
+                    //TINYINT
+                    case 0x01:
+                        record.data[i] = Integer.toString(table.readByte());
+                        break;
 
-					curChar = table.readByte();
-					ch = (char) curChar;
-					curTableName = curTableName + ch;
+                    //SMALLINT
+                    case 0x02:
+                        record.data[i] = Integer.toString(table.readShort());
+                        break;
 
-				}
+                    //INT
+                    case 0x03:
+                        record.data[i] = Integer.toString(table.readInt());
+                        break;
 
-				if(curTableName.equals(search) ){
-					table.seek(8+(i*2));
-					table.writeShort(-1);
+                    //LONG
+                    case 0x04:
+                        record.data[i] = Long.toString(table.readLong());
+                        break;
 
-					//decrement record count
-					table.seek(1);
-					recordCount = (byte) (recordCount - 1);
-					table.writeByte(recordCount);
+                    //FLOAT
+                    case 0x05:
+                        record.data[i] = Float.toString(table.readFloat());
+                        break;
 
-					break;
-				}
-				else {
-					curTableName = "";
-				}
-			}
-		}
-		catch(Exception e){
-			e.printStackTrace();
-		}
+                    //YEAR
+                    case 0x06:
+                        record.data[i] = Integer.toString(table.readInt());
+                        break;
 
-	}
+                    //TIME
+                    case 0x08:
+                        long tmp = table.readLong();
+                        Date date = new Date(tmp);
+                        DateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
+                        String strDate = dateFormat.format(date.getTime());
+                        record.data[i] = strDate;
+                        break;
 
+                    //DATETIME
+                    case 0x0A:
+                        long tmp1 = table.readLong();
+                        Date date1 = new Date(tmp1);
+                        DateFormat dateFormat1 = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+                        String strDate1 = dateFormat1.format(date1.getTime());
+                        record.data[i] = strDate1;
+                        break;
+
+                    //DATE
+                    case 0x0B:
+                        long tmp2 = table.readLong();
+                        Date date2 = new Date(tmp2);
+                        DateFormat dateFormat2 = new SimpleDateFormat("yyyy-mm-dd");
+                        String strDate2 = dateFormat2.format(date2.getTime());
+                        record.data[i] = strDate2;
+                        break;
+
+                    //TEXT
+                    default:
+                        int textLength = record.colDataTypes[i] - 0x0C;
+                        byte[] letters = new byte[textLength];
+                        for (int j = 0; j < textLength; j++)
+                            letters[j] = table.readByte();
+                        record.data[i] = new String(letters);
+                        break;
+                }
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        return record;
+    }
+
+	public static Page retrievePageDetails(RandomAccessFile table, short pageStart){
+
+        Page page = new Page();
+
+        try{
+            table.seek(pageStart);
+            page.pageType = table.readByte();
+            page.recordCount = table.readByte();
+            page.startLocation = table.readShort();
+            page.rightSibling = table.readInt();
+            page.recordLocations = new short[page.recordCount];
+            for(int i = 0; i<page.recordCount; i++) {
+                page.recordLocations[i] = table.readShort();
+            }
+            table.seek(page.startLocation);
+            page.records = new Record[page.recordCount];
+            for (int i = 0; i < page.recordCount; i++)
+                page.records[i] = retrieveRecords(table, page.recordLocations[i]);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        return page;
+    }
 
 }
 
