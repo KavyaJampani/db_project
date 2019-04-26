@@ -23,7 +23,6 @@ public class ExecuteCommands {
             RandomAccessFile table = new RandomAccessFile(fileName, "rw");
 
             int pageCount = (int) (table.length() / pageSize);
-            byte pageStart = 0;
 
             Map<String,String> columnPairs = dbHelper.getColumnNames(tableName);
             dbHelper.displayColumns(columnPairs);
@@ -34,8 +33,7 @@ public class ExecuteCommands {
                 table.seek(pageSize * x);
                 byte pageType = table.readByte();
                 if (pageType == 0x0D) {
-                    pageStart = (byte)(pageSize * page.pageNo);
-                    page = dbHelper.retrievePageDetails(table, pageStart);
+                    page = dbHelper.retrievePageDetails(table, x);
 
                     for (Record record : page.records){
                         System.out.println(record.displayRow());

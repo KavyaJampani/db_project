@@ -39,7 +39,6 @@ public class DavisBaseHelper {
 			RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
 
             int pageCount = (int) (table.length() / pageSize);
-            byte pageStart = 0;
 
             Page page = new Page();
 
@@ -47,8 +46,7 @@ public class DavisBaseHelper {
                 table.seek(pageSize * x);
                 byte pageType = table.readByte();
                 if (pageType == 0x0D) {
-                    pageStart = (byte)(pageSize * page.pageNo);
-                    page = retrievePageDetails(table, pageStart);
+                    page = retrievePageDetails(table, x);
 
                     for (Record record : page.records){
                         if(record.data[0].equals(tableName)) {
