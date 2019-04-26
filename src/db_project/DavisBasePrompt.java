@@ -9,6 +9,10 @@ import java.util.SortedMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import static java.lang.System.out;
 
 /**
@@ -86,66 +90,237 @@ public class DavisBasePrompt {
 		System.out.println(line("-",80));
 	}
 
+	public static void initializeMetaTable() {
+		try {
+			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
 
-	public static void initializeMetaTable(){
-		try{
+			int payloadLength = "davisbase_tables".length();
+			int recordHeaderLength = 1 + 1;
+			int totalRecordLength = recordHeaderLength+ payloadLength;
+			int recordSpace = 2 + 4 + totalRecordLength;
 
-			RandomAccessFile davisbaseTableCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+			int payloadLength2 = "davisbase_columns".length();
+			int recordHeaderLength2 = 1 + 1;
+			int totalRecordLength2 = recordHeaderLength2+ payloadLength2;
+			int recordSpace2 = 2 + 4 + totalRecordLength2;
 
-			davisbaseTableCatalog.setLength(pageSize);
-			davisbaseTableCatalog.seek(0);
-			davisbaseTableCatalog.write(0x0D);
-			davisbaseTableCatalog.write(0x00);
-			davisbaseTableCatalog.seek(4);
-			davisbaseTableCatalog.writeInt(-1);
 
-			String[][] insertValues =
-					{
-							{"davisbase_tables"},
-							{"davisbase_columns"},
-					};
+			davisbaseTablesCatalog.setLength(pageSize);
 
-			for (int i = 0; i< insertValues.length; i++)
-				db_helper.insertRecord(davisbaseTableCatalog, insertValues[i]);
+			// Header
+			davisbaseTablesCatalog.seek(0);
+			// Set Page Type
+			davisbaseTablesCatalog.write(0x0D);
+			// Set Number of Records
+			davisbaseTablesCatalog.write(0x02);
+			// Set Start of Content Location
+			davisbaseTablesCatalog.writeShort(pageSize - recordSpace - recordSpace2 - 1);
+			// Set Rightmost Leaf Page
+			davisbaseTablesCatalog.writeInt(-1);
+			// Store Array of Record Locations
+			davisbaseTablesCatalog.writeShort(pageSize - recordSpace);
+			davisbaseTablesCatalog.writeShort(pageSize - recordSpace  - recordSpace2 - 1);
 
-			davisbaseTableCatalog.close();
+			//Record 2
+			davisbaseTablesCatalog.seek(pageSize - recordSpace - recordSpace2);
+			// Set Length of Payload
+			davisbaseTablesCatalog.writeShort(totalRecordLength2);
+			// Set rowid
+			davisbaseTablesCatalog.writeInt(2);
+			// Set Number of Columns
+			davisbaseTablesCatalog.write(0x01);
+			// Store Array of Column Data Types
+			davisbaseTablesCatalog.write(0x0C + "davisbase_columns".length());
+			// Store List of Column Data Values
+			davisbaseTablesCatalog.writeBytes("davisbase_columns");
+
+			//Record 1
+			//davisbaseTablesCatalog.seek(pageSize - recordSpace);
+
+			// Set Length of Payload
+			davisbaseTablesCatalog.writeShort(totalRecordLength);
+			// Set rowid
+			davisbaseTablesCatalog.writeInt(1);
+			// Set Number of Columns
+			davisbaseTablesCatalog.write(0x01);
+			// Store Array of Column Data Types
+			davisbaseTablesCatalog.write(0x0C + "davisbase_tables".length());
+			// Store List of Column Data Values
+			davisbaseTablesCatalog.writeBytes("davisbase_tables");
+
+			davisbaseTablesCatalog.close();
 		}
-		catch(Exception e){
-			e.printStackTrace();
+		catch (Exception e) {
+			out.println("Unable to create the database_tables file");
+			out.println(e);
 		}
 
 	}
 
-    public static void initializeMetaColumns(){
-        try{
+	public static void insertRecord(){
 
-            RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
+	}
+
+	public static void initializeMetaColumns() {
+		try {
+			RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
+
+			short[] offset = new short[7];
+			short[] payloadLengths = {34,40,41,35,41,42,40};
+			offset[0] = (short)(pageSize - payloadLengths[0]);
+			for(int i = 1; i< payloadLengths.length; i++){
+				offset[i] = (short)(offset[i-1] - payloadLengths[i]);
+			}
 
 			davisbaseColumnsCatalog.setLength(pageSize);
+
+			// Header
 			davisbaseColumnsCatalog.seek(0);
+			// Set Page Type
 			davisbaseColumnsCatalog.write(0x0D);
-			davisbaseColumnsCatalog.write(0x00);
-			davisbaseColumnsCatalog.seek(4);
+			// Set Number of Records
+			davisbaseColumnsCatalog.write(7);
+			// Set Start of Content Location
+			davisbaseColumnsCatalog.writeShort(offset[offset.length-1]);
+			// Set Rightmost Leaf Page
 			davisbaseColumnsCatalog.writeInt(-1);
+			// Store Array of Record Locations
+			for (int i = 0; i< 7; i++){
+				davisbaseColumnsCatalog.writeShort(offset[i]);
+			}
 
-            String[][] insertValues =
-                    {
-                            {"davisbase_tables", "table_name", "TEXT"},
-                            {"davisbase_columns", "table_name", "TEXT"},
-                            {"davisbase_columns", "column_name", "TEXT"},
-                            {"davisbase_columns", "data_type", "TEXT"}
-                    };
+			davisbaseColumnsCatalog.seek(offset[6]);
+			//Record 7
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(7);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_columns".length());
+			davisbaseColumnsCatalog.write(0x0C + "data_type".length());
+			davisbaseColumnsCatalog.write(0x0C + "TEXT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_columns");
+			davisbaseColumnsCatalog.writeBytes("data_type");
+			davisbaseColumnsCatalog.writeBytes("TEXT");
 
-            for (int i = 0; i< insertValues.length; i++)
-                db_helper.insertRecord(davisbaseColumnsCatalog, insertValues[i]);
 
-            davisbaseColumnsCatalog.close();
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
+			//Record 6
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(5);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_columns".length());
+			davisbaseColumnsCatalog.write(0x0C + "column_name".length());
+			davisbaseColumnsCatalog.write(0x0C + "TEXT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_columns");
+			davisbaseColumnsCatalog.writeBytes("column_name");
+			davisbaseColumnsCatalog.writeBytes("TEXT");
 
-    }
+			//Record 5
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(5);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_columns".length());
+			davisbaseColumnsCatalog.write(0x0C + "table_name".length());
+			davisbaseColumnsCatalog.write(0x0C + "TEXT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_columns");
+			davisbaseColumnsCatalog.writeBytes("table_name");
+			davisbaseColumnsCatalog.writeBytes("TEXT");
+
+			//Record 4
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(4);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_columns".length());
+			davisbaseColumnsCatalog.write(0x0C + "rowid".length());
+			davisbaseColumnsCatalog.write(0x0C + "INT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_columns");
+			davisbaseColumnsCatalog.writeBytes("rowid");
+			davisbaseColumnsCatalog.writeBytes("INT");
+
+			//Record 3
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[2]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(3);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_tables".length());
+			davisbaseColumnsCatalog.write(0x0C + "record_count".length());
+			davisbaseColumnsCatalog.write(0x0C + "INT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_tables");
+			davisbaseColumnsCatalog.writeBytes("record_count");
+			davisbaseColumnsCatalog.writeBytes("INT");
+
+
+			//Record 2
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[1]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(2);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_tables".length());
+			davisbaseColumnsCatalog.write(0x0C + "table_name".length());
+			davisbaseColumnsCatalog.write(0x0C + "TEXT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_tables");
+			davisbaseColumnsCatalog.writeBytes("table_name");
+			davisbaseColumnsCatalog.writeBytes("TEXT");
+
+
+			//Record 1
+			//davisbaseColumnsCatalog.seek(offset[0]);
+			// Set Length of Payload
+			davisbaseColumnsCatalog.writeShort(payloadLengths[0]);
+			// Set rowid
+			davisbaseColumnsCatalog.writeInt(1);
+			// Set Number of Columns
+			davisbaseColumnsCatalog.write(0x03);
+			// Store Array of Column Data Types
+			davisbaseColumnsCatalog.write(0x0C + "davisbase_tables".length());
+			davisbaseColumnsCatalog.write(0x0C + "rowid".length());
+			davisbaseColumnsCatalog.write(0x0C + "INT".length());
+			// Store List of Column Data Values
+			davisbaseColumnsCatalog.writeBytes("davisbase_tables");
+			davisbaseColumnsCatalog.writeBytes("rowid");
+			davisbaseColumnsCatalog.writeBytes("INT");
+
+			davisbaseColumnsCatalog.close();
+		}
+		catch (Exception e) {
+			out.println("Unable to create the database_tables file");
+			out.println(e);
+		}
+
+	}
+
 
 	public static void initializeDataStore() {
 		try {
@@ -169,6 +344,7 @@ public class DavisBasePrompt {
 
 		initializeMetaTable();
 		initializeMetaColumns();
+
 
 	}
 	
@@ -253,7 +429,7 @@ public class DavisBasePrompt {
 			//DDL Commands
 			case "show":
 				System.out.println("CASE: SHOW");
-				db_helper.showTables();
+				showTables();
 				break;
 			case "create":
 				System.out.println("CASE: CREATE");
@@ -279,7 +455,7 @@ public class DavisBasePrompt {
 			//VDL Commands
 			case "select":
 				System.out.println("CASE: SELECT");
-				parseQuery(userCommand);
+				DavisBaseHelper.parseQueryString(userCommand);
 				break;
 			case "exit":
 				isExit = true;
@@ -299,6 +475,15 @@ public class DavisBasePrompt {
 		}
 	}
 
+
+	private static void parseQuery(String userCommand) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public static void showTables() {
+
+	}
 	
 	/**
 	 *  Stub method for creating new tables
@@ -351,27 +536,17 @@ public class DavisBasePrompt {
 
 
 	public static void parseInsert(String insertString) {
-		String[] insert = insertString.split(" ");
-		String tableName = insert[2].trim();
-		String values = insertString.split("values")[1].replaceAll("\\(", "").replaceAll("\\)", "").trim();
+		System.out.println("\tParsing the string:\"" + insertString + "\"");
+		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(insertString.split(" ")));
+		String columnList = createTableTokens.get(3).replaceAll("\\(", "").replaceAll("\\)", "");
+		String tableFileName = createTableTokens.get(4) + ".tbl";
 
-		String[] insertValues = values.split(",");
-		for (int i = 0; i < insertValues.length; i++)
-			insertValues[i] = insertValues[i].trim();
-
-		if (!db_helper.findTable(tableName+".tbl")) {
-			System.out.println("Table " + tableName + " does not exist.");
-			System.out.println();
-			return;
-		} else
-		    try {
-                RandomAccessFile table = new RandomAccessFile("data/userdata/" + tableName + ".tbl", "rw");
-                db_helper.insertRecord(table, insertValues);
-				table.close();
-            }
-            catch(Exception e){
-                e.printStackTrace();
-            }
+		ArrayList<String> values = new ArrayList<String>();
+		for (int i = 6; i < createTableTokens.size(); i++)
+			values.add(createTableTokens.get(i).replaceAll("\\(", "").replaceAll("\\)", "").replaceAll(",", ""));
+		out.println(columnList);
+		out.println(tableFileName);
+		out.println(values);
 
 	}
 	public static void parseDelete(String deleteString) {
@@ -394,10 +569,126 @@ public class DavisBasePrompt {
 	 *  Stub method for executing queries
 	 *  @param queryString is a String of the user input
 	 */
-	public static void parseQuery(String queryString) {
-		System.out.println("\tParsing the string:\"" + queryString + "\"");
-		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
-		String tableFileName = createTableTokens.get(3) + ".tbl";
+	
+	public static void Query(String tableName, String[] columnNames, String[] condition) {
+
+		try {
+
+			tableName = tableName.trim();
+			String path = "data/userdata/" + tableName + ".tbl";
+			if (tableName.equalsIgnoreCase("davisbase_tables") || tableName.equalsIgnoreCase("davisbase_columns"))
+				path = "data/catalog/" + tableName + ".tbl";
+
+			RandomAccessFile table = new RandomAccessFile(path, "rw");
+			int noOfPages = (int) (table.length() / pageSize);
+
+			Map<Integer, String> colNames = getColumnNames(tableName);
+			Map<Integer, Builder> records = new LinkedHashMap<Integer, Builder>();
+			for (int i = 0; i < noOfPages; i++) {
+				table.seek(pageSize * i);
+				byte pageType = table.readByte();
+				if (pageType == 0x0D) {
+
+					int noOfBuilders = table.readByte();
+					short[] BuilderLocations = new short[noOfBuilders];
+					table.seek((pageSize * i) + 8);
+					for (int location = 0; location < noOfBuilders; location++) {
+						BuilderLocations[location] = table.readShort();
+					}
+					Map<Integer, Builder> recordBuilders = new LinkedHashMap<Integer, Builder>();
+					recordBuilders = getRecords(table, BuilderLocations, i);
+					records.putAll(recordBuilders);
+				}
+			}
+
+			if (condition.length > 0) {
+				Map<Integer, Builder> filteredRecords = filterRecords(colNames, records, columnNames, condition);
+				printTable(colNames, filteredRecords);
+			} else {
+				if (records.isEmpty()) {
+					System.out.println("Empty Set..");
+				} else {
+					printTable(colNames, records);
+				}
+			}
+			table.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+	
+	public static String[] check(String str) {
+
+		String condition[] = new String[3];
+		String values[] = new String[2];
+		if (str.contains("=")) {
+			values = str.split("=");
+			condition[0] = values[0].trim();
+			condition[1] = "=";
+			condition[2] = values[1].trim();
+		}
+
+		if (str.contains(">")) {
+			values = str.split(">");
+			condition[0] = values[0].trim();
+			condition[1] = ">";
+			condition[2] = values[1].trim();
+		}
+
+		if (str.contains("<")) {
+			values = str.split("<");
+			condition[0] = values[0].trim();
+			condition[1] = "<";
+			condition[2] = values[1].trim();
+		}
+
+		if (str.contains(">=")) {
+			values = str.split(">=");
+			condition[0] = values[0].trim();
+			condition[1] = ">=";
+			condition[2] = values[1].trim();
+		}
+
+		if (str.contains("<=")) {
+			values = str.split("<=");
+			condition[0] = values[0].trim();
+			condition[1] = "<=";
+			condition[2] = values[1].trim();
+		}
+
+		if (str.contains("<>")) {
+			values = str.split("<>");
+			condition[0] = values[0].trim();
+			condition[1] = "<>";
+			condition[2] = values[1].trim();
+		}
+
+		return condition;
+	}
+
+
+	private static void printTable(Map<Integer, String> colNames, Map<Integer, Builder> filteredRecords) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static Map<Integer, Builder> filterRecords(Map<Integer, String> colNames, Map<Integer, Builder> records,
+			String[] columnNames, String[] condition) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static Map<Integer, Builder> getRecords(RandomAccessFile table, short[] builderLocations, int i) {
+		// TODO Auto-generated method stub
+		//Map<Integer, Builder> dummy = new HashMap();
+		//return dummy;
+		return null;
+	}
+
+	private static Map<Integer, String> getColumnNames(String tableName) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
