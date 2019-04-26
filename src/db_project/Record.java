@@ -1,21 +1,23 @@
 package db_project;
 
+import java.util.Arrays;
 
 public class Record {
 
-    public int pageNumber;
     public short payLoadSize;
     public int rowId;
+    public byte columnCount;
     public byte[] colDataTypes;
     public String[] data;
 
+    public String displayRow() {
 
-    public int getPageNumber() {
-        return pageNumber;
-    }
-
-    public void setPageNumber(int pageNumber) {
-        this.pageNumber = pageNumber;
+        String displayString = "\t" + rowId ;
+        for (String colVal : data)
+        {
+            displayString += "\t" + colVal;
+        }
+        return  displayString;
     }
 
     public short getPayLoadSize() {
@@ -34,6 +36,14 @@ public class Record {
         this.rowId = rowId;
     }
 
+    public byte getColumnCount() {
+        return columnCount;
+    }
+
+    public void setColumnCount(byte columnCount) {
+        columnCount = columnCount;
+    }
+
     public byte[] getColDataTypes() {
         return colDataTypes;
     }
@@ -49,4 +59,16 @@ public class Record {
     public void setData(String[] data) {
         this.data = data;
     }
+
+    @Override
+    public String toString() {
+        return "Record{" +
+                "payLoadSize=" + payLoadSize +
+                ", rowId=" + rowId +
+                ", columnCount=" + columnCount +
+                ", colDataTypes=" + Arrays.toString(colDataTypes) +
+                ", data=" + Arrays.toString(data) +
+                '}';
+    }
+
 }

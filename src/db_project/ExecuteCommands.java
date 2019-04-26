@@ -6,7 +6,37 @@ import java.io.RandomAccessFile;
 
 public class ExecuteCommands {
 
-    static long pageSize = 512;
+    static int pageSize = 512;
+    static DavisBaseHelper dbHelper;
+
+
+    public static void showTables() {
+        try{
+            RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+
+            int pageCount = (int) (table.length() / pageSize);
+            byte pageStart = 0;
+
+            Page page = new Page();
+
+            for (int x = 0; x < pageCount; x++) {
+                table.seek(pageSize * x);
+                byte pageType = table.readByte();
+                if (pageType == 0x0D) {
+                    pageStart = (byte)(pageSize * page.pageNo);
+                    page = dbHelper.retrievePageDetails(table, pageStart);
+
+                    for (Record record : page.records){
+                        System.out.println(record.displayRow());
+                    }
+                }
+            }
+            table.close();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 
 
     public static void createTable( RandomAccessFile table, String tableName, String[] columnNames) {
@@ -129,54 +159,6 @@ public class ExecuteCommands {
 
     }
 
-    public static void showTables() {
-        try{
-            RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
-
-            //get record count
-            table.seek(1);
-            byte recordCount = table.readByte();
-
-            short[] offset = new short[recordCount];
-
-            //access array of record locations
-            table.seek(8);
-
-            for (int i = 0; i< recordCount; i++){
-                offset[i] = table.readShort();
-            }
-            String curTableName = "";
-            byte curChar;
-            char ch ;
-            for (int i = 0; i< recordCount; i++){
-
-                table.seek(offset[i]+7);
-                byte stringSize = table.readByte();
-                table.seek(offset[i]+8);
-                for (int j = 0; j< stringSize-12; j++){
-
-                    curChar = table.readByte();
-                    ch = (char) curChar;
-                    curTableName = curTableName + ch;
-
-                }
-                System.out.println(curTableName);
-
-
-                curTableName = "";
-
-            }
-
-            table.close();
-
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-
-
-    }
-
     public static void insertRecord(RandomAccessFile table, String[] insertValues) {
 
         try{
@@ -241,7 +223,6 @@ public class ExecuteCommands {
             for (int i = 0; i < insertValues.length; i++)
                 // Store List of Column Data Values
                 table.writeBytes(insertValues[i]);
-
 
         }
         catch(Exception e){
