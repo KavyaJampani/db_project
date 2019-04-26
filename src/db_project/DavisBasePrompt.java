@@ -129,10 +129,12 @@ public class DavisBasePrompt {
 
             String[][] insertValues =
                     {
-                            {"davisbase_tables", "table_name", "TEXT"},
-                            {"davisbase_columns", "table_name", "TEXT"},
-                            {"davisbase_columns", "column_name", "TEXT"},
-                            {"davisbase_columns", "data_type", "TEXT"}
+                            {"davisbase_tables", "table_name", "TEXT", "NO", "1"},
+                            {"davisbase_columns", "table_name", "TEXT", "NO", "1"},
+                            {"davisbase_columns", "column_name", "TEXT", "NO", "2"},
+                            {"davisbase_columns", "data_type", "TEXT", "NO", "3"},
+							{"davisbase_columns", "ordinal_position", "TINYINT", "NO", "4"},
+							{"davisbase_columns", "is_nullable", "TEXT", "NO", "5"},
                     };
 
             for (int i = 0; i< insertValues.length; i++)
