@@ -2,7 +2,6 @@ package db_project;
 
 import java.io.File;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
 import java.util.Map;
 
 
@@ -33,7 +32,7 @@ public class ExecuteCommands {
                 table.seek(pageSize * x);
                 byte pageType = table.readByte();
                 if (pageType == 0x0D) {
-                    page = dbHelper.retrievePageDetails(table, x);
+                    page = dbHelper.retrievePage(table, x);
 
                     for (Record record : page.records){
                         System.out.println(record.displayRow());
@@ -191,7 +190,7 @@ public class ExecuteCommands {
                 byte pageType = table.readByte();
                 if (pageType == 0x0D) {
 
-                    page = dbHelper.retrievePageDetails(table, x);
+                    page = dbHelper.retrievePage(table, x);
 
                     short oldStartLocation= page.startLocation;
 

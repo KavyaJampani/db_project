@@ -156,6 +156,11 @@ public class DavisBasePrompt {
 				File davisBaseTables = new File("data/catalog/davisbase_tables.tbl");
 				File davisBaseColumns = new File("data/catalog/davisbase_columns.tbl");
 
+				if (!davisBaseTables.exists() || !davisBaseColumns.exists()) {
+					initializeMetaTable();
+					initializeMetaColumns();
+				}
+
 			} else {
 				out.println("Unable to create data container directory");
 				
@@ -166,8 +171,7 @@ public class DavisBasePrompt {
 			out.println(se);
 		}
 
-		initializeMetaTable();
-		initializeMetaColumns();
+
 
 	}
 

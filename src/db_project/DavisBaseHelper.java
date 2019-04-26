@@ -46,7 +46,7 @@ public class DavisBaseHelper {
                 table.seek(pageSize * x);
                 byte pageType = table.readByte();
                 if (pageType == 0x0D) {
-                    page = retrievePageDetails(table, x);
+                    page = retrievePage(table, x);
 
                     for (Record record : page.records){
                         if(record.data[0].equals(tableName)) {
@@ -174,12 +174,10 @@ public class DavisBaseHelper {
         return record;
     }
 
-	public static Page retrievePageDetails(RandomAccessFile table, int pageNo ){
+	public static Page retrievePage(RandomAccessFile table, int pageNo ){
 
         Page page = new Page();
-        byte pageStart = (byte)((pageSize * pageNo) +1);
-        if (pageNo == 0)
-            pageStart = 0;
+        byte pageStart = (byte)((pageSize * pageNo));
 
         try{
             page.pageNo = pageNo;
