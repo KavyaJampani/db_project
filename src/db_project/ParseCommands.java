@@ -107,7 +107,8 @@ public class ParseCommands {
     public static void parseQuery(String queryString) {
         System.out.println("\tParsing the string:\"" + queryString + "\"");
         ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
-        String tableFileName = createTableTokens.get(3) + ".tbl";
+        String tableName = createTableTokens.get(3);
+        executeCommand.displayQuery(tableName);
     }
 
 }

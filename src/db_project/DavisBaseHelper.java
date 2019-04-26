@@ -2,6 +2,7 @@ package db_project;
 
 import java.io.File;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -29,26 +30,49 @@ public class DavisBaseHelper {
 		return false;
 	}
 
-	public static void getColumnNames(String tableName) {
+	public static ArrayList<String> getColumnNames(String tableName) {
 
-		try{
+        ArrayList<String> columnNames = new ArrayList<String>();
+
+        try{
 			RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
 
-			int noOfPages = (int) (table.length() / pageSize);
+            int pageCount = (int) (table.length() / pageSize);
+            byte pageStart = 0;
 
-			for (int i = 0; i < noOfPages; i++) {
-				table.seek(pageSize * i);
-				byte pageType = table.readByte();
-				if (pageType == 0x0D) {
-					table.seek((pageSize * i) + 8);
-				}
-			}
+            Page page = new Page();
 
+            for (int x = 0; x < pageCount; x++) {
+                table.seek(pageSize * x);
+                byte pageType = table.readByte();
+                if (pageType == 0x0D) {
+                    pageStart = (byte)(pageSize * page.pageNo);
+                    page = retrievePageDetails(table, pageStart);
+
+                    for (Record record : page.records){
+                        if(record.data[0].equals(tableName))
+                            columnNames.add(record.data[1]);
+                    }
+                }
+            }
+            table.close();
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
 
+		return columnNames;
+
+	}
+
+	public static void displayColumns(ArrayList<String> columnNames){
+
+        String displayString = "\t Row ID ";
+        for (String columnName : columnNames)
+        {
+            displayString += "\t" + columnName;
+        }
+        System.out.println(displayString);
 	}
 
     public static Record retrieveRecords(RandomAccessFile table, short location){

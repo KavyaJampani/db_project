@@ -2,6 +2,7 @@ package db_project;
 
 import java.io.File;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 
 public class ExecuteCommands {
@@ -10,14 +11,23 @@ public class ExecuteCommands {
     static DavisBaseHelper dbHelper;
 
 
-    public static void showTables() {
+    public static void displayQuery(String tableName) {
         try{
-            RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+            String fileName = "data";
+            if (tableName.equals("davisbase_tables") || tableName.equals("davisbase_columns"))
+                fileName += ("/catalog/" + tableName + ".tbl");
+            else
+                fileName += ("/userdata/" + tableName + ".tbl");
+
+            RandomAccessFile table = new RandomAccessFile(fileName, "rw");
 
             int pageCount = (int) (table.length() / pageSize);
             byte pageStart = 0;
 
             Page page = new Page();
+
+            ArrayList<String> columnNames = dbHelper.getColumnNames(tableName);
+            dbHelper.displayColumns(columnNames);
 
             for (int x = 0; x < pageCount; x++) {
                 table.seek(pageSize * x);
@@ -25,7 +35,7 @@ public class ExecuteCommands {
                 if (pageType == 0x0D) {
                     pageStart = (byte)(pageSize * page.pageNo);
                     page = dbHelper.retrievePageDetails(table, pageStart);
-
+                    
                     for (Record record : page.records){
                         System.out.println(record.displayRow());
                     }

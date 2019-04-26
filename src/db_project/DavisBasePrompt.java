@@ -250,7 +250,7 @@ public class DavisBasePrompt {
 			//DDL Commands
 			case "show":
 				System.out.println("CASE: SHOW");
-				executeCommand.showTables();
+				executeCommand.displayQuery("davisbase_tables");
 				break;
 			case "create":
 				System.out.println("CASE: CREATE");
