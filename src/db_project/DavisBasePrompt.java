@@ -23,7 +23,8 @@ import static java.lang.System.out;
  */
 public class DavisBasePrompt {
 
-	static DavisBaseHelper db_helper;
+	static ExecuteCommands executeCommand;
+	static DavisBaseHelper dbHelper;
 
 	/* This can be changed to whatever you like */
 	static String prompt = "davisql> ";
@@ -106,7 +107,7 @@ public class DavisBasePrompt {
 					};
 
 			for (int i = 0; i< insertValues.length; i++)
-				db_helper.insertRecord(davisbaseTableCatalog, insertValues[i]);
+				executeCommand.insertRecord(davisbaseTableCatalog, insertValues[i]);
 
 			davisbaseTableCatalog.close();
 		}
@@ -137,7 +138,7 @@ public class DavisBasePrompt {
                     };
 
             for (int i = 0; i< insertValues.length; i++)
-                db_helper.insertRecord(davisbaseColumnsCatalog, insertValues[i]);
+                executeCommand.insertRecord(davisbaseColumnsCatalog, insertValues[i]);
 
             davisbaseColumnsCatalog.close();
         }
@@ -253,7 +254,7 @@ public class DavisBasePrompt {
 			//DDL Commands
 			case "show":
 				System.out.println("CASE: SHOW");
-				db_helper.showTables();
+				executeCommand.showTables();
 				break;
 			case "create":
 				System.out.println("CASE: CREATE");
@@ -322,8 +323,9 @@ public class DavisBasePrompt {
 			RandomAccessFile table;
 			try {
 				table = new RandomAccessFile("data/userdata/" + tableName + ".tbl", "rw");
-				DavisBaseHelper.createTable(table, tableName, columnNames);
-			} catch (FileNotFoundException e) {
+				executeCommand.createTable(table, tableName, columnNames);
+				table.close();
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -342,8 +344,8 @@ public class DavisBasePrompt {
 			System.out.println("User Error: Cannot drop the meta tables.");
 			return;
 		}
-		if (db_helper.findTable(tableName+".tbl"))
-			db_helper.dropTable(tableName);
+		if (dbHelper.findTable(tableName+".tbl"))
+			executeCommand.dropTable(tableName);
 		else{
 		    System.out.println("User Error: Table does not exist.");
         }
@@ -359,14 +361,14 @@ public class DavisBasePrompt {
 		for (int i = 0; i < insertValues.length; i++)
 			insertValues[i] = insertValues[i].trim();
 
-		if (!db_helper.findTable(tableName+".tbl")) {
+		if (!dbHelper.findTable(tableName+".tbl")) {
 			System.out.println("Table " + tableName + " does not exist.");
 			System.out.println();
 			return;
 		} else
 		    try {
                 RandomAccessFile table = new RandomAccessFile("data/userdata/" + tableName + ".tbl", "rw");
-                db_helper.insertRecord(table, insertValues);
+                executeCommand.insertRecord(table, insertValues);
 				table.close();
             }
             catch(Exception e){
@@ -399,7 +401,6 @@ public class DavisBasePrompt {
 		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
 		String tableFileName = createTableTokens.get(3) + ".tbl";
 	}
-
 
 
 }
