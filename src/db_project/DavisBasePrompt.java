@@ -107,7 +107,6 @@ public class DavisBasePrompt {
 			for (int i = 0; i< insertValues.length; i++)
 				executeCommand.insertRecord(davisbaseTableCatalog, insertValues[i]);
 
-			davisbaseTableCatalog.close();
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -129,16 +128,17 @@ public class DavisBasePrompt {
 
             String[][] insertValues =
                     {
-                            {"davisbase_tables", "table_name", "TEXT"},
-                            {"davisbase_columns", "table_name", "TEXT"},
-                            {"davisbase_columns", "column_name", "TEXT"},
-                            {"davisbase_columns", "data_type", "TEXT"}
+                            {"davisbase_tables", "table_name", "TEXT", "NO", "1"},
+                            {"davisbase_columns", "table_name", "TEXT", "NO", "1"},
+                            {"davisbase_columns", "column_name", "TEXT", "NO", "2"},
+                            {"davisbase_columns", "data_type", "TEXT", "NO", "3"},
+							{"davisbase_columns", "ordinal_position", "TINYINT", "NO", "4"},
+							{"davisbase_columns", "is_nullable", "TEXT", "NO", "5"},
                     };
 
             for (int i = 0; i< insertValues.length; i++)
                 executeCommand.insertRecord(davisbaseColumnsCatalog, insertValues[i]);
 
-            davisbaseColumnsCatalog.close();
         }
         catch(Exception e){
             e.printStackTrace();
@@ -156,6 +156,11 @@ public class DavisBasePrompt {
 				File davisBaseTables = new File("data/catalog/davisbase_tables.tbl");
 				File davisBaseColumns = new File("data/catalog/davisbase_columns.tbl");
 
+				if (!davisBaseTables.exists() || !davisBaseColumns.exists()) {
+					initializeMetaTable();
+					initializeMetaColumns();
+				}
+
 			} else {
 				out.println("Unable to create data container directory");
 				
@@ -166,8 +171,7 @@ public class DavisBasePrompt {
 			out.println(se);
 		}
 
-		initializeMetaTable();
-		initializeMetaColumns();
+
 
 	}
 

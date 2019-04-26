@@ -1,10 +1,7 @@
 package db_project;
 
-import javafx.util.Pair;
-
 import java.io.File;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
 import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -42,7 +39,6 @@ public class DavisBaseHelper {
 			RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
 
             int pageCount = (int) (table.length() / pageSize);
-            byte pageStart = 0;
 
             Page page = new Page();
 
@@ -50,8 +46,7 @@ public class DavisBaseHelper {
                 table.seek(pageSize * x);
                 byte pageType = table.readByte();
                 if (pageType == 0x0D) {
-                    pageStart = (byte)(pageSize * page.pageNo);
-                    page = retrievePageDetails(table, pageStart);
+                    page = retrievePage(table, x);
 
                     for (Record record : page.records){
                         if(record.data[0].equals(tableName)) {
@@ -85,6 +80,7 @@ public class DavisBaseHelper {
         Record record  = new Record();
 
         try{
+            //System.out.println("location " +  location);
             table.seek(location);
             record.payLoadSize = table.readShort();
             record.rowId = table.readInt();
@@ -178,11 +174,13 @@ public class DavisBaseHelper {
         return record;
     }
 
-	public static Page retrievePageDetails(RandomAccessFile table, short pageStart){
+	public static Page retrievePage(RandomAccessFile table, int pageNo ){
 
         Page page = new Page();
+        byte pageStart = (byte)((pageSize * pageNo));
 
         try{
+            page.pageNo = pageNo;
             table.seek(pageStart);
             page.pageType = table.readByte();
             page.recordCount = table.readByte();
@@ -192,6 +190,8 @@ public class DavisBaseHelper {
             for(int i = 0; i<page.recordCount; i++) {
                 page.recordLocations[i] = table.readShort();
             }
+            if(page.startLocation <= 0)
+                page.startLocation = (short) (pageStart + pageSize);
             table.seek(page.startLocation);
             page.records = new Record[page.recordCount];
             for (int i = 0; i < page.recordCount; i++)

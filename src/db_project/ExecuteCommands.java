@@ -2,13 +2,12 @@ package db_project;
 
 import java.io.File;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
 import java.util.Map;
 
 
 public class ExecuteCommands {
 
-    static int pageSize = 512;
+    static short pageSize = 512;
     static DavisBaseHelper dbHelper;
 
 
@@ -23,7 +22,6 @@ public class ExecuteCommands {
             RandomAccessFile table = new RandomAccessFile(fileName, "rw");
 
             int pageCount = (int) (table.length() / pageSize);
-            byte pageStart = 0;
 
             Map<String,String> columnPairs = dbHelper.getColumnNames(tableName);
             dbHelper.displayColumns(columnPairs);
@@ -34,8 +32,7 @@ public class ExecuteCommands {
                 table.seek(pageSize * x);
                 byte pageType = table.readByte();
                 if (pageType == 0x0D) {
-                    pageStart = (byte)(pageSize * page.pageNo);
-                    page = dbHelper.retrievePageDetails(table, pageStart);
+                    page = dbHelper.retrievePage(table, x);
 
                     for (Record record : page.records){
                         System.out.println(record.displayRow());
@@ -93,19 +90,19 @@ public class ExecuteCommands {
             RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
 
             for (int i = 0; i< columnNames.length; i++) {
-
                 String[] columnInfo = columnNames[i].split(" ");
-                String[] insertValues = {tableName, columnInfo[0], columnInfo[1].toUpperCase()};
+                String[] insertValues = new String[]{tableName, columnInfo[0], columnInfo[1].toUpperCase(), "YES", Integer.toString(i)};
+                if (columnInfo.length > 2)
+                    if (columnInfo[2].equals("NOT"))
+                        insertValues[3] = "NO";
+
                 insertRecord(davisbaseColumnsCatalog, insertValues);
             }
-
             davisbaseColumnsCatalog.close();
-
         }
         catch(Exception e){
             e.printStackTrace();
         }
-
     }
 
 
@@ -170,71 +167,68 @@ public class ExecuteCommands {
 
     }
 
+
     public static void insertRecord(RandomAccessFile table, String[] insertValues) {
 
         try{
 
-            int payloadLength = 0;
+            short payloadLength = 0;
 
             for (int i = 0; i < insertValues.length; i++)
                 payloadLength += insertValues[i].length() ;
-            int recordHeaderLength = 1 + insertValues.length;
-            int totalRecordLength = recordHeaderLength + payloadLength;
-            int recordSpace = 2 + 4 + totalRecordLength;
+            short recordHeaderLength = (short) (1 + insertValues.length);
+            short totalRecordLength = (short) (recordHeaderLength + payloadLength);
+            short recordSpace = (short) (2 + 4 + totalRecordLength);
 
-            //Increment record count
-            table.seek(1);
-            byte recordCount = table.readByte();
-            recordCount = (byte) (recordCount + 1);
-            table.seek(1);
-            table.writeByte(recordCount);
+            int pageCount = (int) (table.length() / pageSize);
 
-            short oldStartLocation;
-            int prevRowid;
-            if(recordCount-1 == 0){
+            Page page;
 
-                oldStartLocation = (short) pageSize;
-                prevRowid = 0;
+            for (int x = 0; x < pageCount; x++) {
+                table.seek(pageSize * x);
 
+                byte pageType = table.readByte();
+                if (pageType == 0x0D) {
+
+                    page = dbHelper.retrievePage(table, x);
+
+                    short oldStartLocation= page.startLocation;
+
+                    int prevRowid;
+                    if(page.recordCount == 0){
+                        prevRowid = 0;
+
+                    }
+                    else{
+                        //TODO: access it through record class
+                        table.seek(oldStartLocation+2);
+                        prevRowid = table.readInt();
+                    }
+
+                    //update record locations and start location
+                    page.addRecordLocation(table, recordSpace);
+
+                    //add record value
+                    table.seek(oldStartLocation - recordSpace);
+
+                    // Set Length of Payload
+                    table.writeShort(totalRecordLength);
+                    // Set rowid
+                    table.writeInt(prevRowid+1);
+                    // Set Number of Columns
+                    table.write(insertValues.length);
+
+                    for (int i = 0; i < insertValues.length; i++)
+                        // Store Array of Column Data Types
+                        table.write(0x0C + insertValues[i].length());
+                    for (int i = 0; i < insertValues.length; i++)
+                        // Store List of Column Data Values
+                        table.writeBytes(insertValues[i]);
+
+                    page.incrementRecordCount(table);
+
+                }
             }
-            else{
-
-                //get prev record location
-                table.seek(2);
-                oldStartLocation = table.readShort();
-
-                //get prev rowid
-                table.seek(oldStartLocation+2);
-                prevRowid = table.readInt();
-
-            }
-
-            // update Array of Record Location
-            table.seek(7+ ((recordCount-1)*2)+1);
-            table.writeShort(oldStartLocation - recordSpace);
-
-            //Update Start of Content Location
-            table.seek(2);
-            table.writeShort(oldStartLocation - recordSpace);
-
-
-            //add record value
-            table.seek(oldStartLocation - recordSpace);
-
-            // Set Length of Payload
-            table.writeShort(totalRecordLength);
-            // Set rowid
-            table.writeInt(prevRowid+1);
-            // Set Number of Columns
-            table.write(insertValues.length);
-
-            for (int i = 0; i < insertValues.length; i++)
-                // Store Array of Column Data Types
-                table.write(0x0C + insertValues[i].length());
-            for (int i = 0; i < insertValues.length; i++)
-                // Store List of Column Data Values
-                table.writeBytes(insertValues[i]);
-
         }
         catch(Exception e){
             e.printStackTrace();

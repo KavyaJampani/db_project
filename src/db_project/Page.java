@@ -1,9 +1,11 @@
 package db_project;
 
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 
 public class Page {
 
+    static int pageSize = 512;
     public int pageNo;
     public byte pageType;
     public byte recordCount;
@@ -11,6 +13,50 @@ public class Page {
     public int rightSibling;
     public short[] recordLocations;
     public Record[] records;
+
+    public void incrementRecordCount(RandomAccessFile table){
+        try {
+            byte pageStart = (byte) (pageSize * pageNo);
+            recordCount += 1;
+
+            table.seek(pageStart + 1);
+            table.writeByte(recordCount);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void decrementRecordCount(RandomAccessFile table){
+        try {
+            byte pageStart = (byte) (pageSize * pageNo);
+            recordCount -= 1;
+
+            table.seek(pageStart + 1);
+            table.writeByte(recordCount);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void addRecordLocation(RandomAccessFile table, short newRecordSpace){
+        try {
+            byte pageStart = (byte) (pageSize * pageNo);
+            short newRecordLocation = (short) (startLocation - newRecordSpace);
+
+            // update Array of Record Location
+            table.seek(pageStart+ 7+ ((recordCount)*2)+1);
+            table.writeShort(newRecordLocation);
+
+            //Update Start of Content Location
+            table.seek(2);
+            table.writeShort(newRecordLocation);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 
     public int getPageNo() {
         return pageNo;
