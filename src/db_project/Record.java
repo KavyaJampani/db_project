@@ -3,8 +3,17 @@ package db_project;
 import java.util.Arrays;
 
 public class Record {
+	//added page no of the cell
+	public int pageNo;
+    public int getPageNo() {
+		return pageNo;
+	}
 
-    public short payLoadSize;
+	public void setPageNo(int pageNo) {
+		this.pageNo = pageNo;
+	}
+
+	public short payLoadSize;
     public int rowId;
     public byte columnCount;
     public byte[] colDataTypes;
