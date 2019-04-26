@@ -39,9 +39,8 @@ public class DavisBaseHelper {
 			table.writeInt(-1);
 			table.close();
 
-			updateMetaTable2(tableName);
-			updateMetaColumns2(tableName, columnNames);
-
+			updateMetaTable(tableName);
+			updateMetaColumns(tableName, columnNames);
 
 		}
 		catch(Exception e){
@@ -49,7 +48,7 @@ public class DavisBaseHelper {
 		}
 	}
 
-	public static void updateMetaTable2(String tableName){
+	public static void updateMetaTable(String tableName){
 		try{
 
 			RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
@@ -66,7 +65,7 @@ public class DavisBaseHelper {
 
 	}
 
-	public static void updateMetaColumns2(String tableName, String[] columnNames){
+	public static void updateMetaColumns(String tableName, String[] columnNames){
 		try{
 
 			RandomAccessFile davisbaseColumnsCatalog = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
@@ -102,7 +101,6 @@ public class DavisBaseHelper {
 			//access array of record locations
 			davisbaseTablesCatalog.seek(8);
 
-			System.out.println(recordCount);
 			for (int i = 0; i< recordCount; i++){
 				offset[i] = davisbaseTablesCatalog.readShort();
 			}
@@ -121,8 +119,7 @@ public class DavisBaseHelper {
 					curTableName = curTableName + ch;
 
 				}
-				//TODO: known bug: davisbase_columns isn't read
-				//System.out.println(curTableName);
+
 				if(curTableName.equals(tableName) ){
 					davisbaseTablesCatalog.seek(8+(i*2));
 					davisbaseTablesCatalog.writeShort(-1);
@@ -142,11 +139,60 @@ public class DavisBaseHelper {
 
             File file = new File("data/userdata/" + tableName +".tbl");
             file.delete();
+			davisbaseTablesCatalog.close();
 
         }
         catch(Exception e){
             e.printStackTrace();
         }
+
+	}
+
+	public static void showTables() {
+		try{
+			RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
+
+			//get record count
+			table.seek(1);
+			byte recordCount = table.readByte();
+
+			short[] offset = new short[recordCount];
+
+			//access array of record locations
+			table.seek(8);
+
+			for (int i = 0; i< recordCount; i++){
+				offset[i] = table.readShort();
+			}
+			String curTableName = "";
+			byte curChar;
+			char ch ;
+			for (int i = 0; i< recordCount; i++){
+
+				table.seek(offset[i]+7);
+				byte stringSize = table.readByte();
+				table.seek(offset[i]+8);
+				for (int j = 0; j< stringSize-12; j++){
+
+					curChar = table.readByte();
+					ch = (char) curChar;
+					curTableName = curTableName + ch;
+
+				}
+				System.out.println(curTableName);
+
+
+				curTableName = "";
+
+			}
+
+			table.close();
+
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+
 
 	}
 

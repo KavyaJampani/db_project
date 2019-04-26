@@ -253,7 +253,7 @@ public class DavisBasePrompt {
 			//DDL Commands
 			case "show":
 				System.out.println("CASE: SHOW");
-				showTables();
+				db_helper.showTables();
 				break;
 			case "create":
 				System.out.println("CASE: CREATE");
@@ -299,10 +299,6 @@ public class DavisBasePrompt {
 		}
 	}
 
-
-	public static void showTables() {
-
-	}
 	
 	/**
 	 *  Stub method for creating new tables
@@ -402,7 +398,6 @@ public class DavisBasePrompt {
 		System.out.println("\tParsing the string:\"" + queryString + "\"");
 		ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(queryString.split(" ")));
 		String tableFileName = createTableTokens.get(3) + ".tbl";
-		String condition = createTableTokens.get(5);
 	}
 
 
