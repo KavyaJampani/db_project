@@ -163,15 +163,12 @@ public class DavisBasePrompt {
 
 			} else {
 				out.println("Unable to create data container directory");
-				
 			}
 		}
 		catch (SecurityException se) {
 			out.println("Unable to create data container directory");
 			out.println(se);
 		}
-
-
 
 	}
 

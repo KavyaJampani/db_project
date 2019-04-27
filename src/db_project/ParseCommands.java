@@ -52,7 +52,7 @@ public class ParseCommands {
             System.out.println("User Error: Cannot drop the meta tables.");
             return;
         }
-        if (dbHelper.findTable(tableName+".tbl"))
+        if (executeCommand.searchforRecord("davisbase_tables", 0, tableName).location != -1)
             executeCommand.dropTable(tableName);
         else{
             System.out.println("User Error: Table does not exist.");

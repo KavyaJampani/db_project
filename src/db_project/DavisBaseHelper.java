@@ -6,6 +6,7 @@ import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DavisBaseHelper {
@@ -33,7 +34,7 @@ public class DavisBaseHelper {
 
 	public static Map<String,String>  getColumnNames(String tableName) {
 
-        Map<String,String> columnPairs = new HashMap< String,String>();
+        Map<String,String> columnPairs = new HashMap<String,String>();
 
         try{
 			RandomAccessFile table = new RandomAccessFile("data/catalog/davisbase_columns.tbl", "rw");
@@ -77,11 +78,12 @@ public class DavisBaseHelper {
 
     public static Record retrieveRecords(RandomAccessFile table, short location){
 
-        Record record  = new Record();
+        Record record = new Record();
 
         try{
-            //System.out.println("location " +  location);
+
             table.seek(location);
+            record.location = location;
             record.payLoadSize = table.readShort();
             record.rowId = table.readInt();
             record.columnCount = table.readByte();
@@ -194,8 +196,14 @@ public class DavisBaseHelper {
                 page.startLocation = (short) (pageStart + pageSize);
             table.seek(page.startLocation);
             page.records = new Record[page.recordCount];
-            for (int i = 0; i < page.recordCount; i++)
+            for (int i = 0; i < page.recordCount; i++) {
+                if (page.recordLocations[i] == -1) {
+                    //i--;
+                    continue;
+                }
                 page.records[i] = retrieveRecords(table, page.recordLocations[i]);
+                page.records[i].pageNo = page.pageNo;
+            }
         }
         catch(Exception e){
             e.printStackTrace();
