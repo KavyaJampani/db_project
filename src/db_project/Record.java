@@ -14,6 +14,10 @@ public class Record {
 
     public String displayRow() {
 
+        if (location == -1){
+            return "";
+        }
+
         String displayString = "\t" + rowId ;
         for (String colVal : data)
         {

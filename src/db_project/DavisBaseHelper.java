@@ -68,6 +68,8 @@ public class DavisBaseHelper {
 
 	public static void displayColumns(Map<String,String> columnNames){
 
+	    //TODO: display the columns in the corrent (reverse) order
+
         String displayString = "\t Row ID ";
         for (String columnName : columnNames.keySet())
         {
@@ -79,6 +81,11 @@ public class DavisBaseHelper {
     public static Record retrieveRecords(RandomAccessFile table, short location){
 
         Record record = new Record();
+
+        if (location == -1){
+            record.location = -1;
+            return record;
+        }
 
         try{
 
@@ -189,21 +196,27 @@ public class DavisBaseHelper {
             page.startLocation = table.readShort();
             page.rightSibling = table.readInt();
             page.recordLocations = new short[page.recordCount];
-            for(int i = 0; i<page.recordCount; i++) {
-                page.recordLocations[i] = table.readShort();
+
+            int i = 0;
+            while(i< page.recordCount){
+                short temp = table.readShort();
+                if(temp == -1)
+                    continue;
+                if(temp == 0)
+                    break;
+                page.recordLocations[i] = temp;
+                i++;
             }
+
             if(page.startLocation <= 0)
                 page.startLocation = (short) (pageStart + pageSize);
             table.seek(page.startLocation);
             page.records = new Record[page.recordCount];
-            for (int i = 0; i < page.recordCount; i++) {
-                if (page.recordLocations[i] == -1) {
-                    //i--;
-                    continue;
-                }
+            for(i = 0; i<page.recordCount; i++) {
                 page.records[i] = retrieveRecords(table, page.recordLocations[i]);
                 page.records[i].pageNo = page.pageNo;
             }
+
         }
         catch(Exception e){
             e.printStackTrace();

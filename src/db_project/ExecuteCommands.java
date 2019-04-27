@@ -26,7 +26,7 @@ public class ExecuteCommands {
             Map<String,String> columnPairs = dbHelper.getColumnNames(tableName);
             dbHelper.displayColumns(columnPairs);
 
-            Page page = new Page();
+            Page page;
 
             for (int x = 0; x < pageCount; x++) {
                 table.seek(pageSize * x);
@@ -35,8 +35,6 @@ public class ExecuteCommands {
                     page = dbHelper.retrievePage(table, x);
 
                     for (Record record : page.records){
-                        if (record == null)
-                            continue;
                         System.out.println(record.displayRow());
                     }
                 }
