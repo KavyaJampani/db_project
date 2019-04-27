@@ -4,6 +4,8 @@ import java.util.Arrays;
 
 public class Record {
 
+    public int pageNo;
+    public short location;
     public short payLoadSize;
     public int rowId;
     public byte columnCount;
@@ -18,6 +20,12 @@ public class Record {
             displayString += "\t" + colVal;
         }
         return  displayString;
+    }
+
+    public Record(short location) {
+        this.location = -1;
+    }
+    public Record() {
     }
 
     public short getPayLoadSize() {
@@ -63,12 +71,15 @@ public class Record {
     @Override
     public String toString() {
         return "Record{" +
-                "payLoadSize=" + payLoadSize +
+                "pageNo=" + pageNo +
+                ", location=" + location +
+                ", payLoadSize=" + payLoadSize +
                 ", rowId=" + rowId +
                 ", columnCount=" + columnCount +
                 ", colDataTypes=" + Arrays.toString(colDataTypes) +
                 ", data=" + Arrays.toString(data) +
                 '}';
     }
+
 
 }
