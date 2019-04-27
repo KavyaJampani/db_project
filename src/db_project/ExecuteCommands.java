@@ -131,7 +131,8 @@ public class ExecuteCommands {
             RandomAccessFile table = new RandomAccessFile(fileName, "rw");
 
             //TODO: getcolumn index
-            Record record = searchforRecord(tableName, 1, deleteString);
+            //right now it just searches the first column for the deleteString
+            Record record = searchforRecord(tableName, 0, deleteString);
 
             Page page = dbHelper.retrievePage(table, record.pageNo);
 
