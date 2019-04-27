@@ -109,31 +109,8 @@ public class ExecuteCommands {
     public static void dropTable(String tableName){
 
         try{
-            RandomAccessFile davisbaseTablesCatalog = new RandomAccessFile("data/catalog/davisbase_tables.tbl", "rw");
 
-
-            Record record = searchforRecord("davisbase_tables", 0, tableName);
-
-
-            Page page = dbHelper.retrievePage(davisbaseTablesCatalog, record.pageNo);
-            System.out.println(record);
-            System.out.println(page);
-
-            for(int i = 0; i<page.recordCount; i++){
-                if (page.records[i].location == record.location){
-                    System.out.println("here");
-                    System.out.println(record.location);
-                    davisbaseTablesCatalog.seek((pageSize * page.pageNo) + 8 + (i*2));
-                    davisbaseTablesCatalog.writeShort(-1);
-                    page.decrementRecordCount(davisbaseTablesCatalog);
-
-                    File file = new File("data/userdata/" + tableName +".tbl");
-                    file.delete();
-
-                }
-            }
-
-            davisbaseTablesCatalog.close();
+            deleteRecord("davisbase_tables", "table_name", tableName);
 
         }
         catch(Exception e){
@@ -141,6 +118,45 @@ public class ExecuteCommands {
         }
 
     }
+
+
+    public static void deleteRecord(String tableName, String columnName, String deleteString){
+        try{
+            String fileName = "data";
+            if (tableName.equals("davisbase_tables"))
+                fileName += ("/catalog/" + tableName + ".tbl");
+            else
+                fileName += ("/userdata/" + tableName + ".tbl");
+
+            RandomAccessFile table = new RandomAccessFile(fileName, "rw");
+
+            //TODO: getcolumn index
+            Record record = searchforRecord(tableName, 1, deleteString);
+
+            Page page = dbHelper.retrievePage(table, record.pageNo);
+
+            for(int i = 0; i<page.recordCount; i++){
+                if (page.records[i].location == record.location){
+                    table.seek((pageSize * page.pageNo) + 8 + (i*2));
+                    table.writeShort(-1);
+                    page.decrementRecordCount(table);
+
+                    if (tableName.equals("davisbase_tables")) {
+                        File file = new File("data/userdata/" + tableName + ".tbl");
+                        file.delete();
+                    }
+                }
+            }
+
+            table.close();
+
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
 
 
     public static Record searchforRecord(String tableName, int columnIndex, String searchString){

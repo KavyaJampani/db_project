@@ -87,8 +87,10 @@ public class ParseCommands {
     public static void parseDelete(String deleteString) {
         System.out.println("\tParsing the string:\"" + deleteString + "\"");
         ArrayList<String> createTableTokens = new ArrayList<String>(Arrays.asList(deleteString.split(" ")));
-        String tableFileName = createTableTokens.get(3) + ".tbl";
-        String condition = createTableTokens.get(5);
+        String tableFileName = createTableTokens.get(3) ;
+        String columnName = createTableTokens.get(5);
+        String recordToDelete = createTableTokens.get(7);
+        executeCommand.deleteRecord(tableFileName, columnName, recordToDelete);
     }
 
     public static void parseUpdate(String updateString) {
