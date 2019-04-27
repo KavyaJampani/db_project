@@ -195,8 +195,6 @@ public class ExecuteCommands {
                     for (Record record : page.records){
 
                         if (record.data[columnIndex].equals(searchString)) {
-                            System.out.println("reached here");
-                            System.out.println(record.data[columnIndex]);
                             foundRecord = record;
                             break;
 
